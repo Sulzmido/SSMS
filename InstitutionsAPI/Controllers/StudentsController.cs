@@ -126,24 +126,39 @@ namespace InstitutionsAPI.Controllers
         }
 
         // DELETE: api/Institutions/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteStudent([FromRoute] int id)
+        [HttpDelete("{institutionCode}/{id}")]
+        public async Task<IActionResult> DeleteStudent([FromRoute] string institutionCode, [FromRoute] int id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var institution = await _context.Institutions.FindAsync(id);
-            if (institution == null)
+            var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
+            if (connectionString == null || string.IsNullOrEmpty(connectionString))
+            {
+                return BadRequest("Invalid Institution Code");
+            }
+
+            var studentExpando = DatabaseHelper.ExecuteFindQuery(connectionString, $"Select * from [dbo].[Students] where ID={id}");
+
+            var student = studentExpando.ToObject<Student>();
+
+            if (student == null || student.Name == null)
             {
                 return NotFound();
             }
 
-            _context.Institutions.Remove(institution);
-            await _context.SaveChangesAsync();
+            try
+            {
+                DatabaseHelper.ExecutePureQuery(connectionString, $@"DELETE FROM [dbo].[Students] WHERE ID='{student.ID}'");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.ToString());
+            }
 
-            return Ok(institution);
+            return Ok(student);
         }
     }
 }
