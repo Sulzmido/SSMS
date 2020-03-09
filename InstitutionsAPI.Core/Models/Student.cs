@@ -4,7 +4,10 @@ using System.Text;
 
 namespace InstitutionsAPI.Core.Models
 {
-    class Student
+    public class Student
     {
+        public int ID { get; set; }
+
+        public string Name { get; set; }
     }
 }
