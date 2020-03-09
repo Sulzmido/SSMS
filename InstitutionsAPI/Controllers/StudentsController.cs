@@ -114,8 +114,8 @@ namespace InstitutionsAPI.Controllers
 
             try
             {
-                DatabaseHelper.ExecutePureQuery(connectionString, $@"INSERT INTO [dbo].[Students]
-                                                                    ([Name]) VALUES ('{student.Name}')");
+                student.ID = DatabaseHelper.ExecuteCreate(connectionString, $@"INSERT INTO [dbo].[Students]
+                                                                    ([Name]) output INSERTED.ID VALUES ('{student.Name}')");
             }
             catch (Exception ex)
             {

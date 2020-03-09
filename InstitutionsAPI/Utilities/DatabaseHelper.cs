@@ -116,5 +116,21 @@ namespace InstitutionsAPI.Utilities
                 
             }
         }
+
+        public static int ExecuteCreate(string connectionString, string query)
+        {
+            using (SqlConnection myConnection = new SqlConnection(connectionString))
+            {
+                SqlCommand cmd = new SqlCommand(query, myConnection);
+
+                myConnection.Open();
+
+                int id = (int)cmd.ExecuteScalar();
+
+                myConnection.Close();
+
+                return id;
+            }
+        }
     }
 }
