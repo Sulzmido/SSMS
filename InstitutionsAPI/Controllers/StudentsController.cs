@@ -25,7 +25,7 @@ namespace InstitutionsAPI.Controllers
         {
             // get institution's connection string.
             var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
-            
+            return new List<Student>();
             // check appropriate database
 
         }
