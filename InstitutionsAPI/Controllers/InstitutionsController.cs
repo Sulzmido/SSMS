@@ -92,16 +92,16 @@ namespace InstitutionsAPI.Controllers
             }
 
             var dbName = institution.Name.Replace(' ', '_');
-            institution.ConnectionString = @"Data Source =.\SQLEXPRESS; Initial Catalog = Institution_"+dbName+"; User ID = sa; Password = P@ssw0rd";
+            institution.ConnectionString = @"Data Source =.\SQLEXPRESS; Initial Catalog = "+dbName+"; User ID = sa; Password = P@ssw0rd";
 
             try
             {
                 DatabaseHelper.CreateDatabase(dbName);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
 
-                return 
+                return BadRequest(ex.ToString()); 
             }
             
 
