@@ -1,11 +1,12 @@
 ﻿using InstitutionsAPI.Core.Models;
+using InstitutionsAPI.Data.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace InstitutionsAPI.Data.DAL
 {
-    public class InstitutionDAO
+    public class InstitutionDAO : IInstitutionDAO
     {
         public Institution Create (Institution institution)
         {
