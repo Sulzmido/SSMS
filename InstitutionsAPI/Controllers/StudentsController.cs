@@ -21,11 +21,13 @@ namespace InstitutionsAPI.Controllers
 
         // GET: api/Institutions
         [HttpGet("{institutionCode}")]
-        public IEnumerable<Student> GetStudents()
+        public IEnumerable<Student> GetStudents([FromRoute] string institutionCode)
         {
-            return new List<Student>();
             // get institution's connection string.
+            var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
+            
             // check appropriate database
+
         }
     }
 }
