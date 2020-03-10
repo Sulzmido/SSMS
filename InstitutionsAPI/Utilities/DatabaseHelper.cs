@@ -75,7 +75,7 @@ namespace InstitutionsAPI.Utilities
             }
         }
 
-        public static List<IDictionary<string, Object>> ExecuteSelectQuery(string connectionString, string query)
+        public static List<IDictionary<string, object>> ExecuteSelectQuery(string connectionString, string query)
         {
 
             var matchingObjects = new List<IDictionary<string, object>>();

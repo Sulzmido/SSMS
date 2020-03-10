@@ -8,6 +8,7 @@ using InstitutionsAPI.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using InstitutionsAPI.Extensions;
+using Newtonsoft.Json;
 
 namespace InstitutionsAPI.Controllers
 {
@@ -16,12 +17,13 @@ namespace InstitutionsAPI.Controllers
     public class StudentsController : ControllerBase
     {
         private readonly ApplicationContext _context = new ApplicationContext();
+        private readonly string _tableName = "Students";
 
         public StudentsController()
         {
         }
 
-        // GET: api/Institutions/{institutionCode}
+        // GET: api/Students/{institutionCode}
         [HttpGet("{institutionCode}")]
         public IEnumerable<Student> GetStudents([FromRoute] string institutionCode)
         {
@@ -31,14 +33,21 @@ namespace InstitutionsAPI.Controllers
 
             if (connectionString == null || string.IsNullOrEmpty(connectionString))
                 return students;
+            try
+            {
+                var studentsData = DatabaseHelper.ExecuteSelectQuery(connectionString, $"Select * from [dbo].[{_tableName}]");
 
-            var studentsData = DatabaseHelper.ExecuteSelectQuery(connectionString, "Select * from [dbo].[Students]");
+                return studentsData.Select(s => SerializationHelper.UnboxEntity<Student>(s));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return students;
+            }
 
-            return studentsData.Select(s => s.ToObject<Student>());
-          
         }
 
-        // GET: api/Institutions/{institutionCode}/5
+        // GET: api/Students/{institutionCode}/5
         [HttpGet("{institutionCode}/{id}")]
         public async Task<IActionResult> GetStudent([FromRoute] string institutionCode, [FromRoute]int id)
         {
@@ -53,19 +62,32 @@ namespace InstitutionsAPI.Controllers
                 return BadRequest("Invalid Institution Code");
             }
 
-            var studentExpando = DatabaseHelper.ExecuteSelectFindQuery(connectionString, $"Select * from [dbo].[Students] where ID={id}");
-
-            var student = studentExpando.ToObject<Student>();
-
-            if (student == null || student.Name == null)
+            IDictionary<string, object> studentData = new Dictionary<string, object>();
+            try
             {
+                studentData = DatabaseHelper.ExecuteSelectFindQuery(connectionString, $"Select * from [dbo].[{_tableName}] where ID={id}");
+
+                if (studentData.Count < 1)
+                {
+                    return NotFound();
+                }
+
+                var student = SerializationHelper.UnboxEntity<Student>(studentData);
+
+                if (student == null)
+                {
+                    return NotFound();
+                }
+                return Ok(student);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
                 return NotFound();
             }
-
-            return Ok(student);
         }
 
-        // PUT: api/Institutions/{institutionCode}/5
+        // PUT: api/Students/{institutionCode}/5
         [HttpPut("{institutionCode}/{id}")]
         public async Task<IActionResult> PutStudent([FromRoute] string institutionCode, [FromRoute] int id, [FromBody] Student student)
         {
@@ -87,17 +109,21 @@ namespace InstitutionsAPI.Controllers
 
             try
             {
-                DatabaseHelper.ExecuteQuery(connectionString, $@"Update [dbo].[Students] set [Name] = '{student.Name}' where ID = {id}");
+                var serializerSettings = SerializationHelper.GetIgnoreIDSerializerSetting(typeof(Student));
+                var serializedEntity = JsonConvert.SerializeObject(student, serializerSettings);
+
+                DatabaseHelper.ExecuteQuery(connectionString, $@"Update [dbo].[{_tableName}] set [SerializedEntity] = '{serializedEntity}' where ID = {id}");
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.ToString());
+                Console.WriteLine(ex.Message);
+                return BadRequest("An system error occured " + ex.Message);
             }
 
             return NoContent();
         }
 
-        // POST: api/Institutions/{institutionCode}
+        // POST: api/Students/{institutionCode}
         [HttpPost("{institutionCode}")]
         public async Task<IActionResult> PostStudent([FromRoute] string institutionCode, [FromBody] Student student)
         {
@@ -114,8 +140,18 @@ namespace InstitutionsAPI.Controllers
 
             try
             {
-                student.ID = DatabaseHelper.ExecuteInsertQuery(connectionString, $@"INSERT INTO [dbo].[Students]
-                                                                    ([Name]) output INSERTED.ID VALUES ('{student.Name}')");
+                var tableExists = DatabaseHelper.ExecuteTableCheck(connectionString, _tableName);
+
+                if (!tableExists)
+                {
+                    DatabaseHelper.CreateTable(connectionString, _tableName);
+                }
+
+                var serializerSettings = SerializationHelper.GetIgnoreIDSerializerSetting(typeof(Student));
+                var serializedEntity = JsonConvert.SerializeObject(student, serializerSettings);
+
+                student.ID = DatabaseHelper.ExecuteInsertQuery(connectionString, $@"INSERT INTO [dbo].[{_tableName}]
+                                                                    ([SerializedEntity]) output INSERTED.ID VALUES ('{serializedEntity}')");
             }
             catch (Exception ex)
             {
@@ -125,7 +161,7 @@ namespace InstitutionsAPI.Controllers
             return CreatedAtAction("GetStudent", new { id = student.ID }, student);
         }
 
-        // DELETE: api/Institutions/{institutionCode}/5
+        // DELETE: api/Students/{institutionCode}/5
         [HttpDelete("{institutionCode}/{id}")]
         public async Task<IActionResult> DeleteStudent([FromRoute] string institutionCode, [FromRoute] int id)
         {
@@ -140,9 +176,9 @@ namespace InstitutionsAPI.Controllers
                 return BadRequest("Invalid Institution Code");
             }
 
-            var studentExpando = DatabaseHelper.ExecuteSelectFindQuery(connectionString, $"Select * from [dbo].[Students] where ID={id}");
+            var studentData = DatabaseHelper.ExecuteSelectFindQuery(connectionString, $"Select * from [dbo].[{_tableName}] where ID={id}");
 
-            var student = studentExpando.ToObject<Student>();
+            var student = SerializationHelper.UnboxEntity<Student>(studentData);
 
             if (student == null || student.Name == null)
             {
@@ -151,7 +187,7 @@ namespace InstitutionsAPI.Controllers
 
             try
             {
-                DatabaseHelper.ExecuteQuery(connectionString, $@"DELETE FROM [dbo].[Students] WHERE ID='{student.ID}'");
+                DatabaseHelper.ExecuteQuery(connectionString, $@"DELETE FROM [dbo].[{_tableName}] WHERE ID='{student.ID}'");
             }
             catch (Exception ex)
             {
