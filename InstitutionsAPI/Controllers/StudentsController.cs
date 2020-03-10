@@ -32,7 +32,7 @@ namespace InstitutionsAPI.Controllers
             if (connectionString == null || string.IsNullOrEmpty(connectionString))
                 return students;
 
-            var studentsData = DatabaseHelper.ExecuteQuery(connectionString, "Select * from [dbo].[Students]");
+            var studentsData = DatabaseHelper.ExecuteSelectQuery(connectionString, "Select * from [dbo].[Students]");
 
             return studentsData.Select(s => s.ToObject<Student>());
           
@@ -53,7 +53,7 @@ namespace InstitutionsAPI.Controllers
                 return BadRequest("Invalid Institution Code");
             }
 
-            var studentExpando = DatabaseHelper.ExecuteFindQuery(connectionString, $"Select * from [dbo].[Students] where ID={id}");
+            var studentExpando = DatabaseHelper.ExecuteSelectFindQuery(connectionString, $"Select * from [dbo].[Students] where ID={id}");
 
             var student = studentExpando.ToObject<Student>();
 
@@ -87,7 +87,7 @@ namespace InstitutionsAPI.Controllers
 
             try
             {
-                DatabaseHelper.ExecutePureQuery(connectionString, $@"Update [dbo].[Students] set [Name] = '{student.Name}' where ID = {id}");
+                DatabaseHelper.ExecuteQuery(connectionString, $@"Update [dbo].[Students] set [Name] = '{student.Name}' where ID = {id}");
             }
             catch (Exception ex)
             {
@@ -114,7 +114,7 @@ namespace InstitutionsAPI.Controllers
 
             try
             {
-                student.ID = DatabaseHelper.ExecuteCreate(connectionString, $@"INSERT INTO [dbo].[Students]
+                student.ID = DatabaseHelper.ExecuteInsertQuery(connectionString, $@"INSERT INTO [dbo].[Students]
                                                                     ([Name]) output INSERTED.ID VALUES ('{student.Name}')");
             }
             catch (Exception ex)
@@ -140,7 +140,7 @@ namespace InstitutionsAPI.Controllers
                 return BadRequest("Invalid Institution Code");
             }
 
-            var studentExpando = DatabaseHelper.ExecuteFindQuery(connectionString, $"Select * from [dbo].[Students] where ID={id}");
+            var studentExpando = DatabaseHelper.ExecuteSelectFindQuery(connectionString, $"Select * from [dbo].[Students] where ID={id}");
 
             var student = studentExpando.ToObject<Student>();
 
@@ -151,7 +151,7 @@ namespace InstitutionsAPI.Controllers
 
             try
             {
-                DatabaseHelper.ExecutePureQuery(connectionString, $@"DELETE FROM [dbo].[Students] WHERE ID='{student.ID}'");
+                DatabaseHelper.ExecuteQuery(connectionString, $@"DELETE FROM [dbo].[Students] WHERE ID='{student.ID}'");
             }
             catch (Exception ex)
             {

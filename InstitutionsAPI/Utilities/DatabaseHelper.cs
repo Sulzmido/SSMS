@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
 using System.Linq;
@@ -47,7 +48,34 @@ namespace InstitutionsAPI.Utilities
             }
         }
 
-        public static List<IDictionary<string, Object>> ExecuteQuery(string connectionString, string query)
+        public static void CreateTable(string connectionString, string tableName)
+        {
+            try
+            {
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    var query = $@"CREATE TABLE [{tableName}] (
+	                                ID int PRIMARY KEY IDENTITY,
+	                                SerializedEntity varchar(100) NOT NULL
+                                )";
+
+                    Console.WriteLine("Executing: {0}", query);
+
+                    var command = new SqlCommand(query, connection);
+
+                    connection.Open();
+
+                    command.ExecuteNonQuery();     
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failure: {0}", ex.Message);
+                throw ex;
+            }
+        }
+
+        public static List<IDictionary<string, Object>> ExecuteSelectQuery(string connectionString, string query)
         {
 
             var matchingObjects = new List<IDictionary<string, object>>();
@@ -106,7 +134,7 @@ namespace InstitutionsAPI.Utilities
             return matchingObjects;
         }
 
-        public static IDictionary<string, object> ExecuteFindQuery(string connectionString, string query)
+        public static IDictionary<string, object> ExecuteSelectFindQuery(string connectionString, string query)
         {
             IDictionary<string, object> entity = new Dictionary<string, object>();
 
@@ -161,7 +189,7 @@ namespace InstitutionsAPI.Utilities
             return entity;
         }
 
-        public static void ExecutePureQuery(string connectionString, string query)
+        public static void ExecuteQuery(string connectionString, string query)
         {
             using (SqlConnection myConnection = new SqlConnection(connectionString))
             {
@@ -176,10 +204,12 @@ namespace InstitutionsAPI.Utilities
             }
         }
 
-        public static int ExecuteCreate(string connectionString, string query)
+        public static int ExecuteInsertQuery(string connectionString, string query)
         {
+            
             using (SqlConnection myConnection = new SqlConnection(connectionString))
             {
+
                 SqlCommand cmd = new SqlCommand(query, myConnection);
 
                 myConnection.Open();
@@ -189,6 +219,24 @@ namespace InstitutionsAPI.Utilities
                 myConnection.Close();
 
                 return id;
+
+            }
+        }
+
+        public static bool ExecuteTableCheck(string connectionString, string tableName)
+        {
+
+            using (SqlConnection myConnection = new SqlConnection(connectionString))
+            {
+                SqlCommand checkTableCmd = new SqlCommand(@"IF EXISTS(
+                                    SELECT 1 FROM INFORMATION_SCHEMA.TABLES 
+                                    WHERE TABLE_NAME = @table) 
+                                    SELECT 1 ELSE SELECT 0", myConnection);
+
+                checkTableCmd.Parameters.Add("@table", SqlDbType.NVarChar).Value = tableName;
+                myConnection.Open();
+                int exists = (int)checkTableCmd.ExecuteScalar();
+                return exists == 1;
             }
         }
     }
