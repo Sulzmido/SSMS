@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace InstitutionsAPI.Core.Models
+namespace InstitutionsAPI.Models
 {
     public class Class
     {

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace InstitutionsAPI.Core.Models
 {
-    class Subject
+    public class Subject
     {
     }
 }
