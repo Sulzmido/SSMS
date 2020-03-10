@@ -1,55 +1,55 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using InstitutionsAPI.Contexts;
+using InstitutionsAPI.Extensions;
 using InstitutionsAPI.Models;
 using InstitutionsAPI.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using InstitutionsAPI.Extensions;
 using Newtonsoft.Json;
 
 namespace InstitutionsAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class StudentsController : ControllerBase
+    public class SubjectCategoriesController : ControllerBase
     {
         private readonly ApplicationContext _context = new ApplicationContext();
-        private readonly string _tableName = "Students";
+        private readonly string _tableName = "SubjectCategories";
 
-        public StudentsController()
+        public SubjectCategoriesController()
         {
         }
 
-        // GET: api/Students/{institutionCode}
+        // GET: api/SubjectCategories/{institutionCode}
         [HttpGet("{institutionCode}")]
-        public IEnumerable<Student> GetStudents([FromRoute] string institutionCode)
+        public IEnumerable<SubjectCategory> GetSubjectCategories([FromRoute] string institutionCode)
         {
-            IList<Student> students = new List<Student>();
+            IList<SubjectCategory> subjectCategories = new List<SubjectCategory>();
 
             var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
 
             if (connectionString == null || string.IsNullOrEmpty(connectionString))
-                return students;
+                return subjectCategories;
             try
             {
-                var studentsData = DatabaseHelper.ExecuteSelectQuery(connectionString, $"Select * from [dbo].[{_tableName}]");
+                var subjectCategoriesData = DatabaseHelper.ExecuteSelectQuery(connectionString, $"Select * from [dbo].[{_tableName}]");
 
-                return studentsData.Select(s => SerializationHelper.UnboxEntity<Student>(s));
+                return subjectCategoriesData.Select(s => SerializationHelper.UnboxEntity<SubjectCategory>(s));
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return students;
+                return subjectCategories;
             }
-
         }
 
-        // GET: api/Students/{institutionCode}/5
+        // GET: api/SubjectCategories/{institutionCode}/5
         [HttpGet("{institutionCode}/{id}")]
-        public async Task<IActionResult> GetStudent([FromRoute] string institutionCode, [FromRoute]int id)
+        public async Task<IActionResult> GetSubjectCategory([FromRoute] string institutionCode, [FromRoute]int id)
         {
             if (!ModelState.IsValid)
             {
@@ -62,34 +62,34 @@ namespace InstitutionsAPI.Controllers
                 return BadRequest("Invalid Institution Code");
             }
 
-            IDictionary<string, object> studentData = new Dictionary<string, object>();
+            IDictionary<string, object> subjectCategoryData = new Dictionary<string, object>();
             try
             {
-                studentData = DatabaseHelper.ExecuteSelectFindQuery(connectionString, $"Select * from [dbo].[{_tableName}] where ID={id}");
+                subjectCategoryData = DatabaseHelper.ExecuteSelectFindQuery(connectionString, $"Select * from [dbo].[{_tableName}] where ID={id}");
 
-                if (studentData.Count < 1)
+                if(subjectCategoryData.Count < 1)
                 {
                     return NotFound();
                 }
 
-                var student = SerializationHelper.UnboxEntity<Student>(studentData);
+                var subjectCategory = SerializationHelper.UnboxEntity<SubjectCategory>(subjectCategoryData);
 
-                if (student == null)
+                if (subjectCategory == null)
                 {
                     return NotFound();
                 }
-                return Ok(student);
+                return Ok(subjectCategory);
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 return NotFound();
-            }
+            }  
         }
 
-        // PUT: api/Students/{institutionCode}/5
+        // PUT: api/SubjectCategories/{institutionCode}/5
         [HttpPut("{institutionCode}/{id}")]
-        public async Task<IActionResult> PutStudent([FromRoute] string institutionCode, [FromRoute] int id, [FromBody] Student student)
+        public async Task<IActionResult> PutSubjectCategory([FromRoute] string institutionCode, [FromRoute] int id, [FromBody] SubjectCategory subjectCategory)
         {
             if (!ModelState.IsValid)
             {
@@ -102,15 +102,15 @@ namespace InstitutionsAPI.Controllers
                 return BadRequest("Invalid Institution Code");
             }
 
-            if (id != student.ID)
+            if (id != subjectCategory.ID)
             {
                 return BadRequest();
             }
 
             try
             {
-                var serializerSettings = SerializationHelper.GetIgnoreIDSerializerSetting(typeof(Student));
-                var serializedEntity = JsonConvert.SerializeObject(student, serializerSettings);
+                var serializerSettings = SerializationHelper.GetIgnoreIDSerializerSetting(typeof(SubjectCategory));
+                var serializedEntity = JsonConvert.SerializeObject(subjectCategory, serializerSettings);
 
                 DatabaseHelper.ExecuteQuery(connectionString, $@"Update [dbo].[{_tableName}] set [SerializedEntity] = '{serializedEntity}' where ID = {id}");
             }
@@ -123,9 +123,9 @@ namespace InstitutionsAPI.Controllers
             return NoContent();
         }
 
-        // POST: api/Students/{institutionCode}
+        // POST: api/SubjectCategories/{institutionCode}
         [HttpPost("{institutionCode}")]
-        public async Task<IActionResult> PostStudent([FromRoute] string institutionCode, [FromBody] Student student)
+        public async Task<IActionResult> PostSubjectCategory([FromRoute] string institutionCode, [FromBody] SubjectCategory subjectCategory)
         {
             if (!ModelState.IsValid)
             {
@@ -147,10 +147,10 @@ namespace InstitutionsAPI.Controllers
                     DatabaseHelper.CreateTable(connectionString, _tableName);
                 }
 
-                var serializerSettings = SerializationHelper.GetIgnoreIDSerializerSetting(typeof(Student));
-                var serializedEntity = JsonConvert.SerializeObject(student, serializerSettings);
+                var serializerSettings = SerializationHelper.GetIgnoreIDSerializerSetting(typeof(SubjectCategory));
+                var serializedEntity = JsonConvert.SerializeObject(subjectCategory, serializerSettings);
 
-                student.ID = DatabaseHelper.ExecuteInsertQuery(connectionString, $@"INSERT INTO [dbo].[{_tableName}]
+                subjectCategory.ID = DatabaseHelper.ExecuteInsertQuery(connectionString, $@"INSERT INTO [dbo].[{_tableName}]
                                                                     ([SerializedEntity]) output INSERTED.ID VALUES ('{serializedEntity}')");
             }
             catch (Exception ex)
@@ -158,12 +158,12 @@ namespace InstitutionsAPI.Controllers
                 return BadRequest(ex.ToString());
             }
 
-            return CreatedAtAction("GetStudent", new { id = student.ID }, student);
+            return CreatedAtAction("GetsubjectCategory", new { id = subjectCategory.ID }, subjectCategory);
         }
 
-        // DELETE: api/Students/{institutionCode}/5
+        // DELETE: api/SubjectCategories/{institutionCode}/5
         [HttpDelete("{institutionCode}/{id}")]
-        public async Task<IActionResult> DeleteStudent([FromRoute] string institutionCode, [FromRoute] int id)
+        public async Task<IActionResult> DeleteSubjectCategory([FromRoute] string institutionCode, [FromRoute] int id)
         {
             if (!ModelState.IsValid)
             {
@@ -176,9 +176,9 @@ namespace InstitutionsAPI.Controllers
                 return BadRequest("Invalid Institution Code");
             }
 
-            var studentData = DatabaseHelper.ExecuteSelectFindQuery(connectionString, $"Select * from [dbo].[{_tableName}] where ID={id}");
+            var subjectCategoryData = DatabaseHelper.ExecuteSelectFindQuery(connectionString, $"Select * from [dbo].[{_tableName}] where ID={id}");
 
-            var student = SerializationHelper.UnboxEntity<Student>(studentData);
+            var student = SerializationHelper.UnboxEntity<SubjectCategory>(subjectCategoryData);
 
             if (student == null || student.Name == null)
             {

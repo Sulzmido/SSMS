@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
 using System.Linq;
@@ -47,10 +48,37 @@ namespace InstitutionsAPI.Utilities
             }
         }
 
-        public static List<ExpandoObject> ExecuteQuery(string connectionString, string query)
+        public static void CreateTable(string connectionString, string tableName)
+        {
+            try
+            {
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    var query = $@"CREATE TABLE [{tableName}] (
+	                                ID int PRIMARY KEY IDENTITY,
+	                                SerializedEntity varchar(100) NOT NULL
+                                )";
+
+                    Console.WriteLine("Executing: {0}", query);
+
+                    var command = new SqlCommand(query, connection);
+
+                    connection.Open();
+
+                    command.ExecuteNonQuery();     
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failure: {0}", ex.Message);
+                throw ex;
+            }
+        }
+
+        public static List<IDictionary<string, object>> ExecuteSelectQuery(string connectionString, string query)
         {
 
-            var matchingObjects = new List<ExpandoObject>();
+            var matchingObjects = new List<IDictionary<string, object>>();
 
             using (SqlConnection myConnection = new SqlConnection(connectionString))
             {           
@@ -60,11 +88,41 @@ namespace InstitutionsAPI.Utilities
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
+                    var columnNames = new string[reader.FieldCount];
+
+                    foreach (var columnId in Enumerable.Range(0, reader.FieldCount))
+                    {
+                        columnNames[columnId] = reader.GetName(columnId);
+                    }
+
                     while (reader.Read())
                     {
-                        dynamic entity = new ExpandoObject(); 
-                        entity.Name = reader["Name"].ToString();
-                        entity.ID = Convert.ToInt32(reader["ID"]);
+                        IDictionary<string, object> entity = new Dictionary<string, object>();
+
+                        foreach (var columnId in Enumerable.Range(0, reader.FieldCount))
+                        {
+                            var columnName = columnNames[columnId];
+
+                            Type type = reader[columnName].GetType();
+                            if(type == typeof(string))
+                            {
+                                entity.Add(columnName, reader[columnName].ToString());                               
+                            }
+                            else if(type == typeof(int))
+                            {
+                                entity.Add(columnName, Convert.ToInt32(reader[columnName]));
+                            }
+                            else if (type == typeof(Boolean))
+                            {
+                                entity.Add(columnName, Convert.ToBoolean(reader[columnName]));
+                            }
+                            else
+                            {
+                                entity.Add(columnName, Convert.ToString(reader[columnName]));
+                                
+                            }
+
+                        }                       
 
                         matchingObjects.Add(entity);
                     }
@@ -76,9 +134,9 @@ namespace InstitutionsAPI.Utilities
             return matchingObjects;
         }
 
-        public static ExpandoObject ExecuteFindQuery(string connectionString, string query)
+        public static IDictionary<string, object> ExecuteSelectFindQuery(string connectionString, string query)
         {
-            dynamic entity = new ExpandoObject();
+            IDictionary<string, object> entity = new Dictionary<string, object>();
 
             using (SqlConnection myConnection = new SqlConnection(connectionString))
             {
@@ -88,11 +146,40 @@ namespace InstitutionsAPI.Utilities
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
+                    var columnNames = new string[reader.FieldCount];
+
+                    foreach (var columnId in Enumerable.Range(0, reader.FieldCount))
+                    {
+                        columnNames[columnId] = reader.GetName(columnId);
+                    }
+
                     while (reader.Read())
                     {
-                        
-                        entity.Name = reader["Name"].ToString();
-                        entity.ID = Convert.ToInt32(reader["ID"]);
+                        foreach (var columnId in Enumerable.Range(0, reader.FieldCount))
+                        {
+                            var columnName = columnNames[columnId];
+
+                            Type type = reader[columnName].GetType();
+
+                            if (type == typeof(string))
+                            {
+                                entity.Add(columnName, reader[columnName].ToString());
+                            }
+                            else if (type == typeof(int))
+                            {
+                                entity.Add(columnName, Convert.ToInt32(reader[columnName]));
+                            }
+                            else if (type == typeof(Boolean))
+                            {
+                                entity.Add(columnName, Convert.ToBoolean(reader[columnName]));
+                            }
+                            else
+                            {
+                                entity.Add(columnName, Convert.ToString(reader[columnName]));
+
+                            }
+
+                        }
                     }
 
                     myConnection.Close();
@@ -102,7 +189,7 @@ namespace InstitutionsAPI.Utilities
             return entity;
         }
 
-        public static void ExecutePureQuery(string connectionString, string query)
+        public static void ExecuteQuery(string connectionString, string query)
         {
             using (SqlConnection myConnection = new SqlConnection(connectionString))
             {
@@ -117,10 +204,12 @@ namespace InstitutionsAPI.Utilities
             }
         }
 
-        public static int ExecuteCreate(string connectionString, string query)
+        public static int ExecuteInsertQuery(string connectionString, string query)
         {
+            
             using (SqlConnection myConnection = new SqlConnection(connectionString))
             {
+
                 SqlCommand cmd = new SqlCommand(query, myConnection);
 
                 myConnection.Open();
@@ -130,6 +219,24 @@ namespace InstitutionsAPI.Utilities
                 myConnection.Close();
 
                 return id;
+
+            }
+        }
+
+        public static bool ExecuteTableCheck(string connectionString, string tableName)
+        {
+
+            using (SqlConnection myConnection = new SqlConnection(connectionString))
+            {
+                SqlCommand checkTableCmd = new SqlCommand(@"IF EXISTS(
+                                    SELECT 1 FROM INFORMATION_SCHEMA.TABLES 
+                                    WHERE TABLE_NAME = @table) 
+                                    SELECT 1 ELSE SELECT 0", myConnection);
+
+                checkTableCmd.Parameters.Add("@table", SqlDbType.NVarChar).Value = tableName;
+                myConnection.Open();
+                int exists = (int)checkTableCmd.ExecuteScalar();
+                return exists == 1;
             }
         }
     }
