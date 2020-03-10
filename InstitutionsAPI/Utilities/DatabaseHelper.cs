@@ -47,10 +47,10 @@ namespace InstitutionsAPI.Utilities
             }
         }
 
-        public static List<ExpandoObject> ExecuteQuery(string connectionString, string query)
+        public static List<IDictionary<string, Object>> ExecuteQuery(string connectionString, string query)
         {
 
-            var matchingObjects = new List<ExpandoObject>();
+            var matchingObjects = new List<IDictionary<string, object>>();
 
             using (SqlConnection myConnection = new SqlConnection(connectionString))
             {           
@@ -60,11 +60,41 @@ namespace InstitutionsAPI.Utilities
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
+                    var columnNames = new string[reader.FieldCount];
+
+                    foreach (var columnId in Enumerable.Range(0, reader.FieldCount))
+                    {
+                        columnNames[columnId] = reader.GetName(columnId);
+                    }
+
                     while (reader.Read())
                     {
-                        dynamic entity = new ExpandoObject(); 
-                        entity.Name = reader["Name"].ToString();
-                        entity.ID = Convert.ToInt32(reader["ID"]);
+                        IDictionary<string, object> entity = new Dictionary<string, object>();
+
+                        foreach (var columnId in Enumerable.Range(0, reader.FieldCount))
+                        {
+                            var columnName = columnNames[columnId];
+
+                            Type type = reader[columnName].GetType();
+                            if(type == typeof(string))
+                            {
+                                entity.Add(columnName, reader[columnName].ToString());                               
+                            }
+                            else if(type == typeof(int))
+                            {
+                                entity.Add(columnName, Convert.ToInt32(reader[columnName]));
+                            }
+                            else if (type == typeof(Boolean))
+                            {
+                                entity.Add(columnName, Convert.ToBoolean(reader[columnName]));
+                            }
+                            else
+                            {
+                                entity.Add(columnName, Convert.ToString(reader[columnName]));
+                                
+                            }
+
+                        }                       
 
                         matchingObjects.Add(entity);
                     }
@@ -76,9 +106,9 @@ namespace InstitutionsAPI.Utilities
             return matchingObjects;
         }
 
-        public static ExpandoObject ExecuteFindQuery(string connectionString, string query)
+        public static IDictionary<string, object> ExecuteFindQuery(string connectionString, string query)
         {
-            dynamic entity = new ExpandoObject();
+            IDictionary<string, object> entity = new Dictionary<string, object>();
 
             using (SqlConnection myConnection = new SqlConnection(connectionString))
             {
@@ -88,11 +118,40 @@ namespace InstitutionsAPI.Utilities
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
+                    var columnNames = new string[reader.FieldCount];
+
+                    foreach (var columnId in Enumerable.Range(0, reader.FieldCount))
+                    {
+                        columnNames[columnId] = reader.GetName(columnId);
+                    }
+
                     while (reader.Read())
                     {
-                        
-                        entity.Name = reader["Name"].ToString();
-                        entity.ID = Convert.ToInt32(reader["ID"]);
+                        foreach (var columnId in Enumerable.Range(0, reader.FieldCount))
+                        {
+                            var columnName = columnNames[columnId];
+
+                            Type type = reader[columnName].GetType();
+
+                            if (type == typeof(string))
+                            {
+                                entity.Add(columnName, reader[columnName].ToString());
+                            }
+                            else if (type == typeof(int))
+                            {
+                                entity.Add(columnName, Convert.ToInt32(reader[columnName]));
+                            }
+                            else if (type == typeof(Boolean))
+                            {
+                                entity.Add(columnName, Convert.ToBoolean(reader[columnName]));
+                            }
+                            else
+                            {
+                                entity.Add(columnName, Convert.ToString(reader[columnName]));
+
+                            }
+
+                        }
                     }
 
                     myConnection.Close();

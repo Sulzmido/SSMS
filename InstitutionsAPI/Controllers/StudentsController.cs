@@ -38,7 +38,7 @@ namespace InstitutionsAPI.Controllers
           
         }
 
-        // GET: api/Institutions/5
+        // GET: api/Institutions/{institutionCode}/5
         [HttpGet("{institutionCode}/{id}")]
         public async Task<IActionResult> GetStudent([FromRoute] string institutionCode, [FromRoute]int id)
         {
@@ -65,7 +65,7 @@ namespace InstitutionsAPI.Controllers
             return Ok(student);
         }
 
-        // PUT: api/Institutions/5
+        // PUT: api/Institutions/{institutionCode}/5
         [HttpPut("{institutionCode}/{id}")]
         public async Task<IActionResult> PutStudent([FromRoute] string institutionCode, [FromRoute] int id, [FromBody] Student student)
         {
@@ -97,7 +97,7 @@ namespace InstitutionsAPI.Controllers
             return NoContent();
         }
 
-        // POST: api/Institutions
+        // POST: api/Institutions/{institutionCode}
         [HttpPost("{institutionCode}")]
         public async Task<IActionResult> PostStudent([FromRoute] string institutionCode, [FromBody] Student student)
         {
@@ -125,7 +125,7 @@ namespace InstitutionsAPI.Controllers
             return CreatedAtAction("GetStudent", new { id = student.ID }, student);
         }
 
-        // DELETE: api/Institutions/5
+        // DELETE: api/Institutions/{institutionCode}/5
         [HttpDelete("{institutionCode}/{id}")]
         public async Task<IActionResult> DeleteStudent([FromRoute] string institutionCode, [FromRoute] int id)
         {
