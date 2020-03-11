@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace InstitutionsAPI.DAL
@@ -15,14 +16,30 @@ namespace InstitutionsAPI.DAL
 
         public new async Task<Subject> InsertAsync(Subject subject)
         {
-            if (subject.Category.GetType() == typeof(string))
+            if (subject.Category != null)
             {
-                subject.Category = Convert.ToString(Convert.ToInt32(subject.Category));
+                if (subject.Category.GetType() == typeof(string))
+                {
+                    subject.Category = Convert.ToString(Convert.ToInt32(subject.Category));
+                }
+                else
+                {
+                    var category = ((JObject)subject.Category).ToObject<SubjectCategory>();
+                    subject.Category = Convert.ToString(category.ID);
+                }
             }
-            else
+
+            if (subject.Level != null)
             {
-                var category = ((JObject)subject.Category).ToObject<SubjectCategory>();
-                subject.Category = Convert.ToString(category.ID);
+                if (subject.Level.GetType() == typeof(string))
+                {
+                    subject.Level = Convert.ToString(Convert.ToInt32(subject.Level));
+                }
+                else
+                {
+                    var category = ((JObject)subject.Level).ToObject<SubjectCategory>();
+                    subject.Level = Convert.ToString(category.ID);
+                }
             }
 
             var result = await base.InsertAsync(subject);
@@ -43,30 +60,52 @@ namespace InstitutionsAPI.DAL
 
         public new async Task UpdateAsync(Subject subject)
         {
-            // edit will be a little tricky  
-
-            // a retrieval will happen first
-            Subject entityToUpdate = await this.FindAsync(subject.ID);
-
-            // we iterate through the values provided in the Subject parameter.
-            // and set values for the entityToUpdate.
-
-            // we take it one by one for now.
-            if(subject.Name != null)
+            if (subject.Category != null)
             {
-                entityToUpdate.Name = subject.Name;
+                if (subject.Category.GetType() == typeof(string))
+                {
+                    subject.Category = Convert.ToString(Convert.ToInt32(subject.Category));
+                }
+                else
+                {
+                    var category = ((JObject)subject.Category).ToObject<SubjectCategory>();
+                    subject.Category = Convert.ToString(category.ID);
+                }
             }
 
-            if (subject.Category.GetType() == typeof(string))
+            if (subject.Level != null)
             {
-                entityToUpdate.Category = Convert.ToString(Convert.ToInt32(subject.Category));
-            }
-            else
-            {
-                var category = ((JObject)subject.Category).ToObject<SubjectCategory>();
-                entityToUpdate.Category = Convert.ToString(category.ID);
+                if (subject.Level.GetType() == typeof(string))
+                {
+                    subject.Level = Convert.ToString(Convert.ToInt32(subject.Level));
+                }
+                else
+                {
+                    var category = ((JObject)subject.Level).ToObject<SubjectCategory>();
+                    subject.Level = Convert.ToString(category.ID);
+                }
             }
 
+            var entityToUpdate = await this.FindAsync(subject.ID);
+            
+            PropertyInfo[] props = typeof(Subject).GetProperties();
+
+            foreach (PropertyInfo prop in props)
+            {
+                if (prop.Name == "ID")
+                {
+                    continue;
+                }
+
+                var value = prop.GetValue(subject);
+
+                if (value != null)
+                {
+                    prop.SetValue(entityToUpdate, value);
+                }
+                
+            }
+           
             await base.UpdateAsync(entityToUpdate);
         }
 

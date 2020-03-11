@@ -19,6 +19,7 @@ namespace InstitutionsAPI.Models
         public int ID { get; set; }
         public string Name { get; set; }
 
+        // Gender enum
         public string Sex { get; set; }
 
         public string Age { get; set; }
@@ -40,6 +41,7 @@ namespace InstitutionsAPI.Models
 
         public string StateOfOrigin { get; set; } // child's state of origin
 
+        // Status enum
         public string MarriageStatus { get; set; }// married or seperated
 
         public string ParentNumber { get; set; }
