@@ -134,7 +134,7 @@ namespace InstitutionsAPI.Utilities
             return matchingObjects;
         }
 
-        public static IDictionary<string, object> ExecuteSelectFindQuery(string connectionString, string query)
+        public static async Task<IDictionary<string, object>> ExecuteSelectFindQueryAsync(string connectionString, string query)
         {
             IDictionary<string, object> entity = new Dictionary<string, object>();
 
@@ -144,7 +144,7 @@ namespace InstitutionsAPI.Utilities
 
                 myConnection.Open();
 
-                using (SqlDataReader reader = cmd.ExecuteReader())
+                using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                 {
                     var columnNames = new string[reader.FieldCount];
 
@@ -189,7 +189,7 @@ namespace InstitutionsAPI.Utilities
             return entity;
         }
 
-        public static void ExecuteQuery(string connectionString, string query)
+        public static async Task ExecuteQueryAsync(string connectionString, string query)
         {
             using (SqlConnection myConnection = new SqlConnection(connectionString))
             {
@@ -197,14 +197,14 @@ namespace InstitutionsAPI.Utilities
 
                 myConnection.Open();
 
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync();
 
                 myConnection.Close();
                 
             }
         }
 
-        public static int ExecuteInsertQuery(string connectionString, string query)
+        public static async Task<int> ExecuteInsertQueryAsync(string connectionString, string query)
         {
             
             using (SqlConnection myConnection = new SqlConnection(connectionString))
@@ -214,7 +214,7 @@ namespace InstitutionsAPI.Utilities
 
                 myConnection.Open();
 
-                int id = (int)cmd.ExecuteScalar();
+                int id = Convert.ToInt32(await cmd.ExecuteScalarAsync());
 
                 myConnection.Close();
 

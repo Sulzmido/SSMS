@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using InstitutionsAPI.Contexts;
+using InstitutionsAPI.DAL;
 using InstitutionsAPI.Extensions;
 using InstitutionsAPI.Models;
 using InstitutionsAPI.Utilities;
@@ -18,7 +19,7 @@ namespace InstitutionsAPI.Controllers
     public class SubjectCategoriesController : ControllerBase
     {
         private readonly ApplicationContext _context = new ApplicationContext();
-        private readonly string _tableName = "SubjectCategories";
+        private readonly SubjectCategoryDAO _dao = new SubjectCategoryDAO();
 
         public SubjectCategoriesController()
         {
@@ -28,17 +29,19 @@ namespace InstitutionsAPI.Controllers
         [HttpGet("{institutionCode}")]
         public IEnumerable<SubjectCategory> GetSubjectCategories([FromRoute] string institutionCode)
         {
-            IList<SubjectCategory> subjectCategories = new List<SubjectCategory>();
+            IEnumerable<SubjectCategory> subjectCategories = new List<SubjectCategory>();
 
             var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
-
+            
             if (connectionString == null || string.IsNullOrEmpty(connectionString))
                 return subjectCategories;
-            try
-            {
-                var subjectCategoriesData = DatabaseHelper.ExecuteSelectQuery(connectionString, $"Select * from [dbo].[{_tableName}]");
 
-                return subjectCategoriesData.Select(s => SerializationHelper.UnboxEntity<SubjectCategory>(s));
+            _dao.ConnectionString = connectionString;
+
+            try
+            {                
+                subjectCategories = _dao.GetAll();
+                return subjectCategories;
             }
             catch (Exception ex)
             {
@@ -55,29 +58,25 @@ namespace InstitutionsAPI.Controllers
             {
                 return BadRequest(ModelState);
             }
-
+           
             var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
+
             if (connectionString == null || string.IsNullOrEmpty(connectionString))
             {
                 return BadRequest("Invalid Institution Code");
             }
 
-            IDictionary<string, object> subjectCategoryData = new Dictionary<string, object>();
+            _dao.ConnectionString = connectionString;
+
             try
-            {
-                subjectCategoryData = DatabaseHelper.ExecuteSelectFindQuery(connectionString, $"Select * from [dbo].[{_tableName}] where ID={id}");
-
-                if(subjectCategoryData.Count < 1)
-                {
-                    return NotFound();
-                }
-
-                var subjectCategory = SerializationHelper.UnboxEntity<SubjectCategory>(subjectCategoryData);
+            {                
+                var subjectCategory = await _dao.FindAsync(id);
 
                 if (subjectCategory == null)
                 {
                     return NotFound();
                 }
+
                 return Ok(subjectCategory);
             }
             catch(Exception ex)
@@ -95,29 +94,29 @@ namespace InstitutionsAPI.Controllers
             {
                 return BadRequest(ModelState);
             }
-
-            var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
-            if (connectionString == null || string.IsNullOrEmpty(connectionString))
-            {
-                return BadRequest("Invalid Institution Code");
-            }
-
+            
             if (id != subjectCategory.ID)
             {
                 return BadRequest();
             }
 
+            var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
+
+            if (connectionString == null || string.IsNullOrEmpty(connectionString))
+            {
+                return BadRequest("Invalid Institution Code");
+            }
+
+            _dao.ConnectionString = connectionString;
+
             try
             {
-                var serializerSettings = SerializationHelper.GetIgnoreIDSerializerSetting(typeof(SubjectCategory));
-                var serializedEntity = JsonConvert.SerializeObject(subjectCategory, serializerSettings);
-
-                DatabaseHelper.ExecuteQuery(connectionString, $@"Update [dbo].[{_tableName}] set [SerializedEntity] = '{serializedEntity}' where ID = {id}");
+                await _dao.UpdateAsync(subjectCategory);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
-                return BadRequest("An system error occured " + ex.Message);
+                Console.WriteLine(ex.Message);// Log exception.
+                return BadRequest("A system error occured " + ex.Message);
             }
 
             return NoContent();
@@ -133,28 +132,21 @@ namespace InstitutionsAPI.Controllers
             }
 
             var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
+
             if (connectionString == null || string.IsNullOrEmpty(connectionString))
             {
                 return BadRequest("Invalid Institution Code");
             }
 
+            _dao.ConnectionString = connectionString;
+
             try
             {
-                var tableExists = DatabaseHelper.ExecuteTableCheck(connectionString, _tableName);
-
-                if (!tableExists)
-                {
-                    DatabaseHelper.CreateTable(connectionString, _tableName);
-                }
-
-                var serializerSettings = SerializationHelper.GetIgnoreIDSerializerSetting(typeof(SubjectCategory));
-                var serializedEntity = JsonConvert.SerializeObject(subjectCategory, serializerSettings);
-
-                subjectCategory.ID = DatabaseHelper.ExecuteInsertQuery(connectionString, $@"INSERT INTO [dbo].[{_tableName}]
-                                                                    ([SerializedEntity]) output INSERTED.ID VALUES ('{serializedEntity}')");
+                subjectCategory = await _dao.InsertAsync(subjectCategory);
             }
             catch (Exception ex)
             {
+                // Log exception.
                 return BadRequest(ex.ToString());
             }
 
@@ -171,30 +163,32 @@ namespace InstitutionsAPI.Controllers
             }
 
             var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
+
             if (connectionString == null || string.IsNullOrEmpty(connectionString))
             {
                 return BadRequest("Invalid Institution Code");
             }
 
-            var subjectCategoryData = DatabaseHelper.ExecuteSelectFindQuery(connectionString, $"Select * from [dbo].[{_tableName}] where ID={id}");
+            _dao.ConnectionString = connectionString;
 
-            var student = SerializationHelper.UnboxEntity<SubjectCategory>(subjectCategoryData);
+            var subjectCategory = await _dao.FindAsync(id);
 
-            if (student == null || student.Name == null)
+            if (subjectCategory == null)
             {
                 return NotFound();
             }
 
             try
-            {
-                DatabaseHelper.ExecuteQuery(connectionString, $@"DELETE FROM [dbo].[{_tableName}] WHERE ID='{student.ID}'");
+            {             
+                await _dao.DeleteAsync(subjectCategory);
             }
             catch (Exception ex)
             {
+                // Log exception.
                 return BadRequest(ex.ToString());
             }
 
-            return Ok(student);
+            return Ok(subjectCategory);
         }
     }
 }

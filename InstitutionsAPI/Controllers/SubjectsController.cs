@@ -7,49 +7,50 @@ using InstitutionsAPI.Models;
 using InstitutionsAPI.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using InstitutionsAPI.Extensions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace InstitutionsAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class StudentsController : ControllerBase
+    public class SubjectsController : ControllerBase
     {
         private readonly ApplicationContext _context = new ApplicationContext();
-        private readonly string _tableName = "Students";
+        private readonly string _tableName = "Subjects";
 
-        public StudentsController()
+        public SubjectsController()
         {
+
         }
 
-        // GET: api/Students/{institutionCode}
+        // GET: api/Subjects/{institutionCode}
         [HttpGet("{institutionCode}")]
-        public IEnumerable<Student> GetStudents([FromRoute] string institutionCode)
+        public IEnumerable<Subject> GetSubjects([FromRoute] string institutionCode)
         {
-            IList<Student> students = new List<Student>();
+            IList<Subject> subjects = new List<Subject>();
 
             var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
 
             if (connectionString == null || string.IsNullOrEmpty(connectionString))
-                return students;
+                return subjects;
             try
             {
-                var studentsData = DatabaseHelper.ExecuteSelectQuery(connectionString, $"Select * from [dbo].[{_tableName}]");
+                var subjectsData = DatabaseHelper.ExecuteSelectQuery(connectionString, $"Select * from [dbo].[{_tableName}]");
 
-                return studentsData.Select(s => SerializationHelper.UnboxEntity<Student>(s));
+                return subjectsData.Select(s => SerializationHelper.UnboxEntity<Subject>(s));
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return students;
+                return subjects;
             }
 
         }
 
-        // GET: api/Students/{institutionCode}/5
+        // GET: api/Subjects/{institutionCode}/5
         [HttpGet("{institutionCode}/{id}")]
-        public async Task<IActionResult> GetStudent([FromRoute] string institutionCode, [FromRoute]int id)
+        public async Task<IActionResult> GetSubject([FromRoute] string institutionCode, [FromRoute]int id)
         {
             if (!ModelState.IsValid)
             {
@@ -62,23 +63,23 @@ namespace InstitutionsAPI.Controllers
                 return BadRequest("Invalid Institution Code");
             }
 
-            IDictionary<string, object> studentData = new Dictionary<string, object>();
+            IDictionary<string, object> subjectData = new Dictionary<string, object>();
             try
             {
-                studentData = await DatabaseHelper.ExecuteSelectFindQueryAsync(connectionString, $"Select * from [dbo].[{_tableName}] where ID={id}");
+                subjectData = await DatabaseHelper.ExecuteSelectFindQueryAsync(connectionString, $"Select * from [dbo].[{_tableName}] where ID={id}");
 
-                if (studentData.Count < 1)
+                if (subjectData.Count < 1)
                 {
                     return NotFound();
                 }
 
-                var student = SerializationHelper.UnboxEntity<Student>(studentData);
+                var subject = SerializationHelper.UnboxEntity<Subject>(subjectData);
 
-                if (student == null)
+                if (subject == null)
                 {
                     return NotFound();
                 }
-                return Ok(student);
+                return Ok(subject);
             }
             catch (Exception ex)
             {
@@ -87,9 +88,9 @@ namespace InstitutionsAPI.Controllers
             }
         }
 
-        // PUT: api/Students/{institutionCode}/5
+        // PUT: api/Subjects/{institutionCode}/5
         [HttpPut("{institutionCode}/{id}")]
-        public async Task<IActionResult> PutStudent([FromRoute] string institutionCode, [FromRoute] int id, [FromBody] Student student)
+        public async Task<IActionResult> PutSubject([FromRoute] string institutionCode, [FromRoute] int id, [FromBody] Subject subject)
         {
             if (!ModelState.IsValid)
             {
@@ -102,15 +103,29 @@ namespace InstitutionsAPI.Controllers
                 return BadRequest("Invalid Institution Code");
             }
 
-            if (id != student.ID)
+            if (id != subject.ID)
             {
                 return BadRequest();
             }
 
+            // edit will be a little tricky  
+            // a retrieval will happen first
+            // we iterate through the values provided in the Subject parameter.
+
             try
             {
-                var serializerSettings = SerializationHelper.GetIgnoreIDSerializerSetting(typeof(Student));
-                var serializedEntity = JsonConvert.SerializeObject(student, serializerSettings);
+                if (subject.Category.GetType() == typeof(string))
+                {
+                    subject.Category = Convert.ToString(Convert.ToInt32(subject.Category));
+                }
+                else
+                {
+                    var category = ((JObject)subject.Category).ToObject<SubjectCategory>();
+                    subject.Category = Convert.ToString(category.ID);
+                }
+
+                var serializerSettings = SerializationHelper.GetIgnoreIDSerializerSetting(typeof(Subject));
+                var serializedEntity = JsonConvert.SerializeObject(subject, serializerSettings);
 
                 await DatabaseHelper.ExecuteQueryAsync(connectionString, $@"Update [dbo].[{_tableName}] set [SerializedEntity] = '{serializedEntity}' where ID = {id}");
             }
@@ -123,9 +138,9 @@ namespace InstitutionsAPI.Controllers
             return NoContent();
         }
 
-        // POST: api/Students/{institutionCode}
+        // POST: api/Subject/{institutionCode}
         [HttpPost("{institutionCode}")]
-        public async Task<IActionResult> PostStudent([FromRoute] string institutionCode, [FromBody] Student student)
+        public async Task<IActionResult> PostSubject([FromRoute] string institutionCode, [FromBody] Subject subject)
         {
             if (!ModelState.IsValid)
             {
@@ -147,10 +162,21 @@ namespace InstitutionsAPI.Controllers
                     DatabaseHelper.CreateTable(connectionString, _tableName);
                 }
 
-                var serializerSettings = SerializationHelper.GetIgnoreIDSerializerSetting(typeof(Student));
-                var serializedEntity = JsonConvert.SerializeObject(student, serializerSettings);
+                // this part of the code can be astracted away
+                if (subject.Category.GetType() == typeof(string))
+                {
+                    subject.Category = Convert.ToString(Convert.ToInt32(subject.Category));
+                }
+                else
+                {
+                    var category = ((JObject)subject.Category).ToObject<SubjectCategory>();
+                    subject.Category = Convert.ToString(category.ID);
+                } 
 
-                student.ID = await DatabaseHelper.ExecuteInsertQueryAsync(connectionString, $@"INSERT INTO [dbo].[{_tableName}]
+                var serializerSettings = SerializationHelper.GetIgnoreIDSerializerSetting(typeof(Subject));
+                var serializedEntity = JsonConvert.SerializeObject(subject, serializerSettings);
+
+                subject.ID = await DatabaseHelper.ExecuteInsertQueryAsync(connectionString, $@"INSERT INTO [dbo].[{_tableName}]
                                                                     ([SerializedEntity]) output INSERTED.ID VALUES ('{serializedEntity}')");
             }
             catch (Exception ex)
@@ -158,12 +184,12 @@ namespace InstitutionsAPI.Controllers
                 return BadRequest(ex.ToString());
             }
 
-            return CreatedAtAction("GetStudent", new { id = student.ID }, student);
+            return CreatedAtAction("GetSubject", new { id = subject.ID }, subject);
         }
 
-        // DELETE: api/Students/{institutionCode}/5
+        // DELETE: api/Subjects/{institutionCode}/5
         [HttpDelete("{institutionCode}/{id}")]
-        public async Task<IActionResult> DeleteStudent([FromRoute] string institutionCode, [FromRoute] int id)
+        public async Task<IActionResult> DeleteSubject([FromRoute] string institutionCode, [FromRoute] int id)
         {
             if (!ModelState.IsValid)
             {
@@ -176,25 +202,25 @@ namespace InstitutionsAPI.Controllers
                 return BadRequest("Invalid Institution Code");
             }
 
-            var studentData = await DatabaseHelper.ExecuteSelectFindQueryAsync(connectionString, $"Select * from [dbo].[{_tableName}] where ID={id}");
-
-            var student = SerializationHelper.UnboxEntity<Student>(studentData);
-
-            if (student == null || student.Name == null)
+            var subjectData = await DatabaseHelper.ExecuteSelectFindQueryAsync(connectionString, $"Select * from [dbo].[{_tableName}] where ID={id}");
+            // find a better way of figuring out if the data exists in the database
+            var subject = SerializationHelper.UnboxEntity<Subject>(subjectData);
+            
+            if (subject == null || subject.Name == null)
             {
                 return NotFound();
             }
 
             try
             {
-                await DatabaseHelper.ExecuteQueryAsync(connectionString, $@"DELETE FROM [dbo].[{_tableName}] WHERE ID='{student.ID}'");
+                await DatabaseHelper.ExecuteQueryAsync(connectionString, $@"DELETE FROM [dbo].[{_tableName}] WHERE ID='{subject.ID}'");
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.ToString());
             }
 
-            return Ok(student);
+            return Ok(subject);
         }
     }
 }
