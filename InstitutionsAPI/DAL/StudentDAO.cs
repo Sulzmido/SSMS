@@ -13,7 +13,21 @@ namespace InstitutionsAPI.DAL
         }
 
         public new async Task<Student> InsertAsync(Student student)
-        {         
+        {
+            string sex = student.Sex;
+
+            if(sex != null && !sex.Equals(Gender.Male.ToString()) && !sex.Equals(Gender.Female.ToString()))
+            {
+                throw new Exception("Invalid Sex Value");
+            }
+            
+            string status = student.Parent?.MarriageStatus;
+
+            if(status != null && !status.Equals(Status.Married.ToString()) && !status.Equals(Status.Seperated.ToString()))
+            {
+                throw new Exception("Invalid MarriageStatus Value");
+            }
+
             var result = await base.InsertAsync(student);
             return result;
         }
