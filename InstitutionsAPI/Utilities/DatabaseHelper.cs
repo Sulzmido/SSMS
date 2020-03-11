@@ -56,7 +56,7 @@ namespace InstitutionsAPI.Utilities
                 {
                     var query = $@"CREATE TABLE [{tableName}] (
 	                                ID int PRIMARY KEY IDENTITY,
-	                                SerializedEntity varchar(100) NOT NULL
+	                                SerializedEntity varchar(1000) NOT NULL
                                 )";
 
                     Console.WriteLine("Executing: {0}", query);

@@ -19,7 +19,7 @@ namespace InstitutionsAPI.Models
         public int ID { get; set; }
         public string Name { get; set; }
 
-        public Gender Sex { get; set; }
+        public string Sex { get; set; }
 
         public string Age { get; set; }
 
@@ -40,7 +40,7 @@ namespace InstitutionsAPI.Models
 
         public string StateOfOrigin { get; set; } // child's state of origin
 
-        public Status MarriageStatus { get; set; }// married or seperated
+        public string MarriageStatus { get; set; }// married or seperated
 
         public string ParentNumber { get; set; }
 
