@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace InstitutionsAPI.DAL
@@ -32,7 +33,25 @@ namespace InstitutionsAPI.DAL
 
         public new async Task UpdateAsync(SubjectCategory subjectCategory)
         {
-            await base.UpdateAsync(subjectCategory);
+            var entityToUpdate = await FindAsync(subjectCategory.ID);
+
+            PropertyInfo[] props = typeof(SubjectCategory).GetProperties();
+
+            foreach (PropertyInfo prop in props)
+            {
+                if (prop.Name == "ID")
+                {
+                    continue;
+                }
+                var value = prop.GetValue(subjectCategory);
+
+                if (value != null)
+                {
+                    prop.SetValue(entityToUpdate, value);
+                }
+
+            }
+                await base.UpdateAsync(subjectCategory);
         }
 
         public new async Task DeleteAsync(SubjectCategory subjectCategory)
