@@ -14,19 +14,22 @@ namespace SchoolManager.Controllers
 {
     public class SubjectCategoriesController : Controller
     {
-        private static HttpClient _client = new HttpClient();
+        private static HttpClient _client = new HttpClient() {};
+        private static readonly string _baseUrl = "http://localhost/InstitutionsAPI/api";
+        private static readonly string _institutionCode = "2";
+        private static readonly string _apiControllerName = "SubjectCategories";
 
         public SubjectCategoriesController()
         {
-            //_client.BaseAddress = new Uri("http://localhost:64195/");
+            _client.BaseAddress = new Uri(_baseUrl);
             _client.DefaultRequestHeaders.Accept.Clear();
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        // GET: SubjectCategories
+        // GET: {_apiControllerName}
         public async Task<IActionResult> Index()
         {
-            string apiUrl = "http://localhost/InstitutionsAPI/api/SubjectCategories/2";
+            string apiUrl = $"/{_apiControllerName}/{_institutionCode}";
 
             List<SubjectCategory> categories = null;
 
@@ -39,7 +42,7 @@ namespace SchoolManager.Controllers
             return View(categories);
         }
 
-        // GET: SubjectCategories/Details/5
+        // GET: {_apiControllerName}/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -47,7 +50,7 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2/{id}";
+            string apiUrl = $"/{_apiControllerName}/{_institutionCode}/{id}";
 
             var subjectCategory = new SubjectCategory();
 
@@ -65,20 +68,20 @@ namespace SchoolManager.Controllers
             return View(subjectCategory);
         }
 
-        // GET: SubjectCategories/Create
+        // GET: {_apiControllerName}/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: SubjectCategories/Create
+        // POST: {_apiControllerName}/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ID,Name")] SubjectCategory subjectCategory)
         {
-            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2";
+            string apiUrl = $"/{_apiControllerName}/{_institutionCode}";
 
             if (ModelState.IsValid)
             {
@@ -90,7 +93,7 @@ namespace SchoolManager.Controllers
             return View(subjectCategory);
         }
 
-        // GET: SubjectCategories/Edit/5
+        // GET: {_apiControllerName}/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -98,7 +101,7 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2/{id}";
+            string apiUrl = $"/{_apiControllerName}/{_institutionCode}/{id}";
 
             SubjectCategory subjectCategory = null;
 
@@ -116,7 +119,7 @@ namespace SchoolManager.Controllers
             return View(subjectCategory);
         }
 
-        // POST: SubjectCategories/Edit/5
+        // POST: {_apiControllerName}/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
@@ -128,7 +131,7 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2/{id}";
+            string apiUrl = $"/{_apiControllerName}/{_institutionCode}/{id}";
 
             if (ModelState.IsValid)
             {
@@ -155,7 +158,7 @@ namespace SchoolManager.Controllers
             return View(subjectCategory);
         }
 
-        // GET: SubjectCategories/Delete/5
+        // GET: {_apiControllerName}/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -163,7 +166,7 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2/{id}";
+            string apiUrl = $"/{_apiControllerName}/{_institutionCode}/{id}";
 
             SubjectCategory subjectCategory = null;
 
@@ -181,12 +184,12 @@ namespace SchoolManager.Controllers
             return View(subjectCategory);
         }
 
-        // POST: SubjectCategories/Delete/5
+        // POST: {_apiControllerName}/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2/{id}";            
+            string apiUrl = $"/{_apiControllerName}/{_institutionCode}/{id}";            
 
             HttpResponseMessage response = await _client.DeleteAsync(apiUrl);
 
@@ -198,7 +201,7 @@ namespace SchoolManager.Controllers
 
         private async Task<bool> SubjectCategoryExists(int id)
         {
-            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2/{id}";
+            string apiUrl = $"/{_apiControllerName}/{_institutionCode}/{id}";
 
             SubjectCategory subjectCategory = null;
 
