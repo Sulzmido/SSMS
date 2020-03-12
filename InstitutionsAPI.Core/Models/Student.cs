@@ -32,15 +32,21 @@ namespace InstitutionsAPI.Core.Models
 
         public string DateOfBirth { get; set; }// student date of birth
 
+        public Parent Parent { get; set; }
+
+    }
+
+    public class Parent
+    {
         #region // from this region we may have to consider if its better to have a db for parents and just tie something unique to identify whose parent each person is.
         [Display(Name = "Parent's Name")]
-        
+
         public string NameOfParents { get; set; }// a particular parent, not both
 
         [Display(Name = "Parent's Birth Date")]
 
         public string ParentDOB { get; set; }// Just month and Day not year
-        
+
         [Display(Name = "Parent's Occupation")]
 
         public string ParentOccupation { get; set; } // just for information
@@ -60,8 +66,6 @@ namespace InstitutionsAPI.Core.Models
         [Display(Name = "Address")]
         public string Address { get; set; }
         #endregion tings like address and state of origin contained in this region can also be left in the student table. 
-
-
 
     }
 }
