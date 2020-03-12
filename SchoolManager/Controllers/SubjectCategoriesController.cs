@@ -7,22 +7,36 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using InstitutionsAPI.Core.Models;
 using SchoolManager.Models;
+using System.Net.Http;
+using System.Net.Http.Headers;
 
 namespace SchoolManager.Controllers
 {
     public class SubjectCategoriesController : Controller
     {
-        private readonly ApplicationContext _context;
+        private static HttpClient _client = new HttpClient();
 
-        public SubjectCategoriesController(ApplicationContext context)
+        public SubjectCategoriesController()
         {
-            _context = context;
+            //_client.BaseAddress = new Uri("http://localhost:64195/");
+            _client.DefaultRequestHeaders.Accept.Clear();
+            _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
         // GET: SubjectCategories
         public async Task<IActionResult> Index()
         {
-            return View(await _context.SubjectCategories.ToListAsync());
+            string apiUrl = "http://localhost/InstitutionsAPI/api/SubjectCategories/2";
+
+            List<SubjectCategory> categories = null;
+
+            HttpResponseMessage response = await _client.GetAsync(apiUrl);
+            if (response.IsSuccessStatusCode)
+            {
+                categories = await response.Content.ReadAsAsync<List<SubjectCategory>>();
+            }
+            
+            return View(categories);
         }
 
         // GET: SubjectCategories/Details/5
@@ -33,8 +47,16 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            var subjectCategory = await _context.SubjectCategories
-                .FirstOrDefaultAsync(m => m.ID == id);
+            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2/{id}";
+
+            var subjectCategory = new SubjectCategory();
+
+            HttpResponseMessage response = await _client.GetAsync(apiUrl);
+            if (response.IsSuccessStatusCode)
+            {
+                subjectCategory = await response.Content.ReadAsAsync<SubjectCategory>();
+            }
+            
             if (subjectCategory == null)
             {
                 return NotFound();
@@ -56,10 +78,13 @@ namespace SchoolManager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ID,Name")] SubjectCategory subjectCategory)
         {
+            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2";
+
             if (ModelState.IsValid)
             {
-                _context.Add(subjectCategory);
-                await _context.SaveChangesAsync();
+                HttpResponseMessage response = await _client.PostAsJsonAsync(apiUrl, subjectCategory);
+                response.EnsureSuccessStatusCode();
+
                 return RedirectToAction(nameof(Index));
             }
             return View(subjectCategory);
@@ -73,11 +98,21 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            var subjectCategory = await _context.SubjectCategories.FindAsync(id);
+            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2/{id}";
+
+            SubjectCategory subjectCategory = null;
+
+            HttpResponseMessage response = await _client.GetAsync(apiUrl);
+            if (response.IsSuccessStatusCode)
+            {
+                subjectCategory = await response.Content.ReadAsAsync<SubjectCategory>();
+            }
+
             if (subjectCategory == null)
             {
                 return NotFound();
             }
+
             return View(subjectCategory);
         }
 
@@ -93,16 +128,20 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
+            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2/{id}";
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(subjectCategory);
-                    await _context.SaveChangesAsync();
+                    HttpResponseMessage response = await _client.PutAsJsonAsync(apiUrl, subjectCategory);
+                    response.EnsureSuccessStatusCode();
+
+                    // subjectCategory = await response.Content.ReadAsAsync<SubjectCategory>();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!SubjectCategoryExists(subjectCategory.ID))
+                    if (!await SubjectCategoryExists(subjectCategory.ID))
                     {
                         return NotFound();
                     }
@@ -124,8 +163,16 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            var subjectCategory = await _context.SubjectCategories
-                .FirstOrDefaultAsync(m => m.ID == id);
+            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2/{id}";
+
+            SubjectCategory subjectCategory = null;
+
+            HttpResponseMessage response = await _client.GetAsync(apiUrl);
+            if (response.IsSuccessStatusCode)
+            {
+                subjectCategory = await response.Content.ReadAsAsync<SubjectCategory>();
+            }
+
             if (subjectCategory == null)
             {
                 return NotFound();
@@ -139,15 +186,33 @@ namespace SchoolManager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var subjectCategory = await _context.SubjectCategories.FindAsync(id);
-            _context.SubjectCategories.Remove(subjectCategory);
-            await _context.SaveChangesAsync();
+            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2/{id}";            
+
+            HttpResponseMessage response = await _client.DeleteAsync(apiUrl);
+
+            var statusCode = response.StatusCode;
+            // Do something with status code ??
+
             return RedirectToAction(nameof(Index));
         }
 
-        private bool SubjectCategoryExists(int id)
+        private async Task<bool> SubjectCategoryExists(int id)
         {
-            return _context.SubjectCategories.Any(e => e.ID == id);
+            string apiUrl = $"http://localhost/InstitutionsAPI/api/SubjectCategories/2/{id}";
+
+            SubjectCategory subjectCategory = null;
+
+            HttpResponseMessage response = await _client.GetAsync(apiUrl);
+
+            if (response.IsSuccessStatusCode)
+            {
+                subjectCategory = await response.Content.ReadAsAsync<SubjectCategory>();
+                return subjectCategory != null;
+            }
+            else
+            {
+                return false;
+            }   
         }
     }
 }
