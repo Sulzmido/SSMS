@@ -12,12 +12,12 @@ using System.Net.Http.Headers;
 
 namespace SchoolManager.Controllers
 {
-    public class SubjectCategoriesController : Controller
+    public class SubjectsController : Controller
     {
         private static HttpClient _client = GetHttpClient();
-    
+
         private static readonly string _institutionCode = "2";
-        private static readonly string _apiControllerName = "SubjectCategories";
+        private static readonly string _apiControllerName = "Subjects";
 
         private static HttpClient GetHttpClient()
         {
@@ -32,27 +32,27 @@ namespace SchoolManager.Controllers
             return client;
         }
 
-        public SubjectCategoriesController()
+        public SubjectsController()
         {
         }
 
-        // GET: {SubjectCategories}
+        // GET: Subjects
         public async Task<IActionResult> Index()
         {
             string apiUrl = $"{_apiControllerName}/{_institutionCode}";
 
-            List<SubjectCategory> categories = null;
+            List<Subject> subjects = null;
 
             HttpResponseMessage response = await _client.GetAsync(apiUrl);
             if (response.IsSuccessStatusCode)
             {
-                categories = await response.Content.ReadAsAsync<List<SubjectCategory>>();
+                subjects = await response.Content.ReadAsAsync<List<Subject>>();
             }
-            
-            return View(categories);
+
+            return View(subjects);
         }
 
-        // GET: {SubjectCategories}/Details/5
+        // GET: Subjects/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -62,48 +62,48 @@ namespace SchoolManager.Controllers
 
             string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
 
-            SubjectCategory subjectCategory = null;
+            Subject subject = null;
 
             HttpResponseMessage response = await _client.GetAsync(apiUrl);
             if (response.IsSuccessStatusCode)
             {
-                subjectCategory = await response.Content.ReadAsAsync<SubjectCategory>();
+                subject = await response.Content.ReadAsAsync<Subject>();
             }
-            
-            if (subjectCategory == null)
+
+            if (subject == null)
             {
                 return NotFound();
             }
 
-            return View(subjectCategory);
+            return View(subject);
         }
 
-        // GET: {SubjectCategories}/Create
+        // GET: Subjects/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: {SubjectCategories}/Create
+        // POST: Subjects/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,Name")] SubjectCategory subjectCategory)
+        public async Task<IActionResult> Create([Bind("ID,Name")] Subject subject)
         {
             string apiUrl = $"{_apiControllerName}/{_institutionCode}";
 
             if (ModelState.IsValid)
             {
-                HttpResponseMessage response = await _client.PostAsJsonAsync(apiUrl, subjectCategory);
+                HttpResponseMessage response = await _client.PostAsJsonAsync(apiUrl, subject);
                 response.EnsureSuccessStatusCode();
 
                 return RedirectToAction(nameof(Index));
             }
-            return View(subjectCategory);
+            return View(subject);
         }
 
-        // GET: {SubjectCategories}/Edit/5
+        // GET: Subjects/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -113,30 +113,29 @@ namespace SchoolManager.Controllers
 
             string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
 
-            SubjectCategory subjectCategory = null;
+            Subject subject = null;
 
             HttpResponseMessage response = await _client.GetAsync(apiUrl);
             if (response.IsSuccessStatusCode)
             {
-                subjectCategory = await response.Content.ReadAsAsync<SubjectCategory>();
+                subject = await response.Content.ReadAsAsync<Subject>();
             }
 
-            if (subjectCategory == null)
+            if (subject == null)
             {
                 return NotFound();
             }
-
-            return View(subjectCategory);
+            return View(subject);
         }
 
-        // POST: {SubjectCategories}/Edit/5
+        // POST: Subjects/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,Name")] SubjectCategory subjectCategory)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,Name")] Subject subject)
         {
-            if (id != subjectCategory.ID)
+            if (id != subject.ID)
             {
                 return NotFound();
             }
@@ -147,14 +146,12 @@ namespace SchoolManager.Controllers
             {
                 try
                 {
-                    HttpResponseMessage response = await _client.PutAsJsonAsync(apiUrl, subjectCategory);
+                    HttpResponseMessage response = await _client.PutAsJsonAsync(apiUrl, subject);
                     response.EnsureSuccessStatusCode();
-
-                    // subjectCategory = await response.Content.ReadAsAsync<SubjectCategory>();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!await SubjectCategoryExists(subjectCategory.ID))
+                    if (!await SubjectExists(subject.ID))
                     {
                         return NotFound();
                     }
@@ -165,10 +162,10 @@ namespace SchoolManager.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(subjectCategory);
+            return View(subject);
         }
 
-        // GET: {SubjectCategories}/Delete/5
+        // GET: Subjects/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -178,54 +175,53 @@ namespace SchoolManager.Controllers
 
             string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
 
-            SubjectCategory subjectCategory = null;
+            Subject subject = null;
 
             HttpResponseMessage response = await _client.GetAsync(apiUrl);
             if (response.IsSuccessStatusCode)
             {
-                subjectCategory = await response.Content.ReadAsAsync<SubjectCategory>();
+                subject = await response.Content.ReadAsAsync<Subject>();
             }
 
-            if (subjectCategory == null)
+            if (subject == null)
             {
                 return NotFound();
             }
 
-            return View(subjectCategory);
+            return View(subject);
         }
 
-        // POST: {SubjectCategories}/Delete/5
+        // POST: Subjects/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";            
+            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
 
             HttpResponseMessage response = await _client.DeleteAsync(apiUrl);
 
             var statusCode = response.StatusCode;
-            // Do something with status code ??
 
             return RedirectToAction(nameof(Index));
         }
 
-        private async Task<bool> SubjectCategoryExists(int id)
+        private async Task<bool> SubjectExists(int id)
         {
             string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
 
-            SubjectCategory subjectCategory = null;
+            Subject subject = null;
 
             HttpResponseMessage response = await _client.GetAsync(apiUrl);
 
             if (response.IsSuccessStatusCode)
             {
-                subjectCategory = await response.Content.ReadAsAsync<SubjectCategory>();
-                return subjectCategory != null;
+                subject = await response.Content.ReadAsAsync<Subject>();
+                return subject != null;
             }
             else
             {
                 return false;
-            }   
+            }
         }
     }
 }
