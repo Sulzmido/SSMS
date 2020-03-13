@@ -9,6 +9,7 @@ using InstitutionsAPI.Core.Models;
 using SchoolManager.Models;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using SchoolManager.Extensions;
 
 namespace SchoolManager.Controllers
 {
@@ -41,15 +42,59 @@ namespace SchoolManager.Controllers
         {
             string apiUrl = $"{_apiControllerName}/{_institutionCode}";
 
-            List<Subject> subjects = null;
+            IList<IDictionary<string, object>> subjects = null;
+            IList<IDictionary<string, object>> modifiedSubjects = new List<IDictionary<string, object>>();
+            IList<Subject> allSubjects = new List<Subject>();
 
             HttpResponseMessage response = await _client.GetAsync(apiUrl);
             if (response.IsSuccessStatusCode)
             {
-                subjects = await response.Content.ReadAsAsync<List<Subject>>();
+                subjects = await response.Content.ReadAsAsync<List<IDictionary<string, object>>>();
             }
 
-            return View(subjects);
+            foreach(var actualSubject in subjects)
+            {
+                var subjectToBeModified = actualSubject.ToDictionary(entry => entry.Key, 
+                                                                    entry => entry.Value);
+                                                                                                    
+                foreach (KeyValuePair<string, object> keyValuePair in actualSubject)
+                {
+                    if(keyValuePair.Key == "id")
+                    {
+                        subjectToBeModified["id"] = Convert.ToInt32(actualSubject["id"]);
+                    }
+
+                    if(keyValuePair.Key == "category")
+                    {
+                        // Get Category from the object, 
+                        var subjectCategoryId = Convert.ToString(keyValuePair.Value);
+
+                        apiUrl = $"SubjectCategories/{_institutionCode}/{subjectCategoryId}";
+
+                        SubjectCategory subjectCategory = null;
+
+                        response = await _client.GetAsync(apiUrl);
+                        if (response.IsSuccessStatusCode)
+                        {
+                            subjectCategory = await response.Content.ReadAsAsync<SubjectCategory>();
+                        }
+
+                        if (subjectCategory != null)
+                        {
+                            // set the new object                            
+                            subjectToBeModified["category"] = subjectCategory;
+                        }
+                        else
+                        {
+                            subjectToBeModified["category"] = new SubjectCategory { Name = "NIL" };
+                        }
+                    }
+                }
+
+                allSubjects.Add(subjectToBeModified.ToObject<Subject>());
+            }
+
+            return View(allSubjects);
         }
 
         // GET: Subjects/Details/5
