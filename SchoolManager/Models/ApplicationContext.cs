@@ -16,5 +16,7 @@ namespace SchoolManager.Models
         }
 
         public DbSet<InstitutionsAPI.Core.Models.SubjectCategory> SubjectCategories { get; set; }
+
+        public DbSet<InstitutionsAPI.Core.Models.Subject> Subjects { get; set; }
     }
 }
