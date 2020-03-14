@@ -1,4 +1,5 @@
-﻿@model InstitutionsAPI.Core.Models.Subject
+﻿@using SchoolManager.ViewModels;
+@model SubjectViewModel
 
 @{
     ViewData["Title"] = "Edit";
@@ -17,6 +18,12 @@
                 <label asp-for="Name" class="control-label"></label>
                 <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Category" class="control-label"></label>
+                <select asp-for="Category" asp-items="Model.Categories">
+                </select>
+                <span asp-validation-for="Category" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-default" />

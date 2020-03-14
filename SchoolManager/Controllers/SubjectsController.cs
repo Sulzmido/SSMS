@@ -96,7 +96,7 @@ namespace SchoolManager.Controllers
         // GET: Subjects/Create
         public IActionResult Create()
         {          
-            var model = new SubjectCreateViewModel { Categories = _categorySelectListItems };
+            var model = new SubjectViewModel { Categories = _categorySelectListItems };
             return View(model);
         }
 
@@ -105,7 +105,7 @@ namespace SchoolManager.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,Category")] SubjectCreateViewModel model)
+        public async Task<IActionResult> Create([Bind("Name,Category")] SubjectViewModel model)
         {
             var subject = new { model.Name, model.Category };
             string apiUrl = $"{_apiControllerName}/{_institutionCode}";
@@ -117,7 +117,8 @@ namespace SchoolManager.Controllers
 
                 return RedirectToAction(nameof(Index));
             }
-            return View(subject);
+            model.Categories = _categorySelectListItems;
+            return View(model);
         }
 
         // GET: Subjects/Edit/5
@@ -145,7 +146,11 @@ namespace SchoolManager.Controllers
 
             var subject = await IncludeSubEntities(entity);
 
-            return View(subject);
+            var model = new SubjectViewModel { ID = subject.ID, Name = subject.Name,
+                                                Category = subject.Category.ID.ToString(),
+                                                Categories = _categorySelectListItems };
+
+            return View(model);
         }
 
         // POST: Subjects/Edit/5
@@ -153,14 +158,16 @@ namespace SchoolManager.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,Name")] Subject subject)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Category")] SubjectViewModel model)
         {
-            if (id != subject.ID)
+            if (id != model.ID)
             {
                 return NotFound();
             }
 
             string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
+
+            var subject = new { model.ID, model.Name, model.Category };
 
             if (ModelState.IsValid)
             {
@@ -171,7 +178,7 @@ namespace SchoolManager.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!await SubjectExists(subject.ID))
+                    if (!await SubjectExists(model.ID))
                     {
                         return NotFound();
                     }
@@ -182,7 +189,8 @@ namespace SchoolManager.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(subject);
+            model.Categories = _categorySelectListItems;
+            return View(model);
         }
 
         // GET: Subjects/Delete/5
@@ -231,14 +239,13 @@ namespace SchoolManager.Controllers
         {
             string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
 
-            Subject subject = null;
+            IDictionary<string, object> entity;
 
             HttpResponseMessage response = await _client.GetAsync(apiUrl);
-
             if (response.IsSuccessStatusCode)
             {
-                subject = await response.Content.ReadAsAsync<Subject>();
-                return subject != null;
+                entity = await response.Content.ReadAsAsync<IDictionary<string, object>>();
+                return entity != null;
             }
             else
             {
