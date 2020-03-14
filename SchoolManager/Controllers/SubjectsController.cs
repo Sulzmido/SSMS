@@ -10,6 +10,7 @@ using SchoolManager.Models;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using SchoolManager.Extensions;
+using SchoolManager.ViewModels;
 
 namespace SchoolManager.Controllers
 {
@@ -19,6 +20,8 @@ namespace SchoolManager.Controllers
 
         private static readonly string _institutionCode = "2";
         private static readonly string _apiControllerName = "Subjects";
+
+        private List<SelectListItem> _categorySelectListItems = GetSubjectCategories().GetAwaiter().GetResult(); 
 
         private static HttpClient GetHttpClient()
         {
@@ -31,10 +34,11 @@ namespace SchoolManager.Controllers
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             return client;
-        }
+        }        
 
         public SubjectsController()
         {
+            
         }
 
         // GET: Subjects
@@ -42,61 +46,25 @@ namespace SchoolManager.Controllers
         {
             string apiUrl = $"{_apiControllerName}/{_institutionCode}";
 
-            IList<IDictionary<string, object>> subjects = null;
-            IList<IDictionary<string, object>> modifiedSubjects = new List<IDictionary<string, object>>();
-            IList<Subject> allSubjects = new List<Subject>();
+            IList<IDictionary<string, object>> entities = null;
 
             HttpResponseMessage response = await _client.GetAsync(apiUrl);
             if (response.IsSuccessStatusCode)
             {
-                subjects = await response.Content.ReadAsAsync<List<IDictionary<string, object>>>();
+                entities = await response.Content.ReadAsAsync<List<IDictionary<string, object>>>();
             }
 
-            foreach(var actualSubject in subjects)
+            var subjects = new List<Subject>();
+
+            foreach(var entity in entities)
             {
-                var subjectToBeModified = actualSubject.ToDictionary(entry => entry.Key, 
-                                                                    entry => entry.Value);
-                                                                                                    
-                foreach (KeyValuePair<string, object> keyValuePair in actualSubject)
-                {
-                    if(keyValuePair.Key == "id")
-                    {
-                        subjectToBeModified["id"] = Convert.ToInt32(actualSubject["id"]);
-                    }
-
-                    if(keyValuePair.Key == "category")
-                    {
-                        // Get Category from the object, 
-                        var subjectCategoryId = Convert.ToString(keyValuePair.Value);
-
-                        apiUrl = $"SubjectCategories/{_institutionCode}/{subjectCategoryId}";
-
-                        SubjectCategory subjectCategory = null;
-
-                        response = await _client.GetAsync(apiUrl);
-                        if (response.IsSuccessStatusCode)
-                        {
-                            subjectCategory = await response.Content.ReadAsAsync<SubjectCategory>();
-                        }
-
-                        if (subjectCategory != null)
-                        {
-                            // set the new object                            
-                            subjectToBeModified["category"] = subjectCategory;
-                        }
-                        else
-                        {
-                            subjectToBeModified["category"] = new SubjectCategory { Name = "NIL" };
-                        }
-                    }
-                }
-
-                allSubjects.Add(subjectToBeModified.ToObject<Subject>());
+                var subject = await IncludeSubEntities(entity);
+                subjects.Add(subject);
             }
-
-            return View(allSubjects);
+            
+            return View(subjects);
         }
-
+       
         // GET: Subjects/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -107,26 +75,29 @@ namespace SchoolManager.Controllers
 
             string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
 
-            Subject subject = null;
+            IDictionary<string, object> entity = null;
 
             HttpResponseMessage response = await _client.GetAsync(apiUrl);
             if (response.IsSuccessStatusCode)
             {
-                subject = await response.Content.ReadAsAsync<Subject>();
+                entity = await response.Content.ReadAsAsync<IDictionary<string, object>>();
             }
 
-            if (subject == null)
+            if (entity == null)
             {
                 return NotFound();
             }
+
+            var subject = await IncludeSubEntities(entity);
 
             return View(subject);
         }
 
         // GET: Subjects/Create
         public IActionResult Create()
-        {
-            return View();
+        {          
+            var model = new SubjectCreateViewModel { Categories = _categorySelectListItems };
+            return View(model);
         }
 
         // POST: Subjects/Create
@@ -134,8 +105,9 @@ namespace SchoolManager.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,Name")] Subject subject)
+        public async Task<IActionResult> Create([Bind("Name,Category")] SubjectCreateViewModel model)
         {
+            var subject = new { model.Name, model.Category };
             string apiUrl = $"{_apiControllerName}/{_institutionCode}";
 
             if (ModelState.IsValid)
@@ -158,18 +130,21 @@ namespace SchoolManager.Controllers
 
             string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
 
-            Subject subject = null;
+            IDictionary<string, object> entity = null;
 
             HttpResponseMessage response = await _client.GetAsync(apiUrl);
             if (response.IsSuccessStatusCode)
             {
-                subject = await response.Content.ReadAsAsync<Subject>();
+                entity = await response.Content.ReadAsAsync<IDictionary<string, object>>();
             }
 
-            if (subject == null)
+            if (entity == null)
             {
                 return NotFound();
             }
+
+            var subject = await IncludeSubEntities(entity);
+
             return View(subject);
         }
 
@@ -220,18 +195,20 @@ namespace SchoolManager.Controllers
 
             string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
 
-            Subject subject = null;
+            IDictionary<string, object> entity = null;
 
             HttpResponseMessage response = await _client.GetAsync(apiUrl);
             if (response.IsSuccessStatusCode)
             {
-                subject = await response.Content.ReadAsAsync<Subject>();
+                entity = await response.Content.ReadAsAsync<IDictionary<string, object>>();
             }
 
-            if (subject == null)
+            if (entity == null)
             {
                 return NotFound();
             }
+
+            var subject = await IncludeSubEntities(entity);
 
             return View(subject);
         }
@@ -267,6 +244,55 @@ namespace SchoolManager.Controllers
             {
                 return false;
             }
+        }
+
+        private static async Task<List<SelectListItem>> GetSubjectCategories()
+        {
+            string apiUrl = $"SubjectCategories/{_institutionCode}";
+
+            List<SubjectCategory> categories = null;
+
+            HttpResponseMessage response = await _client.GetAsync(apiUrl);
+            if (response.IsSuccessStatusCode)
+            {
+                categories = await response.Content.ReadAsAsync<List<SubjectCategory>>();
+            }
+
+            return categories.Select(c => new SelectListItem
+            {
+                Value = c.ID.ToString(),
+                Text = c.Name
+            }).ToList();
+        }
+
+        private async Task<Subject> IncludeSubEntities(IDictionary<string, object> subject)
+        {
+            subject["id"] = Convert.ToInt32(subject["id"]);
+
+            var defaultCategory = new SubjectCategory { Name = "NIL" };
+
+            if (subject["category"] != null)
+            {
+                var subjectCategoryId = Convert.ToString(subject["category"]);
+
+                string apiUrl = $"SubjectCategories/{_institutionCode}/{subjectCategoryId}";
+
+                SubjectCategory subjectCategory = null;
+
+                HttpResponseMessage response = await _client.GetAsync(apiUrl);
+                if (response.IsSuccessStatusCode)
+                {
+                    subjectCategory = await response.Content.ReadAsAsync<SubjectCategory>();
+                }
+
+                subject["category"] = subjectCategory ?? defaultCategory;
+            }
+            else
+            {
+                subject["category"] = defaultCategory;
+            }
+
+            return subject.ToObject<Subject>();
         }
     }
 }
