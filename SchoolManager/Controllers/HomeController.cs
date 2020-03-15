@@ -15,6 +15,19 @@ namespace SchoolManager.Controllers
     {
         private static HttpClient _client = GetHttpClient();
 
+        private static HttpClient GetHttpClient()
+        {
+            var baseUrl = "http://localhost/InstitutionsAPI/api/";
+
+            var client = new HttpClient();
+
+            client.BaseAddress = new Uri(baseUrl);
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            return client;
+        }
+
         public IActionResult Index()
         {
             return View();
@@ -47,7 +60,7 @@ namespace SchoolManager.Controllers
 
         public IActionResult Institution()
         {
-            string apiUrl = $"Institutions/7";
+            string apiUrl = $"Institutions/1";
 
             Institution institution = null;
 
@@ -63,19 +76,6 @@ namespace SchoolManager.Controllers
             }
 
             return View(institution);
-        }
-
-        private static HttpClient GetHttpClient()
-        {
-            var baseUrl = "http://localhost/InstitutionsAPI/api/";
-
-            var client = new HttpClient();
-
-            client.BaseAddress = new Uri(baseUrl);
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-            return client;
-        }
+        }      
     }
 }

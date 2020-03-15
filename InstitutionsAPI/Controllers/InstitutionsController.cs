@@ -19,6 +19,7 @@ namespace InstitutionsAPI.Controllers
 
         public InstitutionsController()
         {
+            _context.Database.Migrate();
         }
 
         // GET: api/Institutions
