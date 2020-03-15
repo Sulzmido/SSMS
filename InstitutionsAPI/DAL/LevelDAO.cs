@@ -48,6 +48,11 @@ namespace InstitutionsAPI.DAL
 
             }
             await base.UpdateAsync(level);
+
+        }
+        public new async Task DeleteAsync(Level level)
+        {
+            await base.DeleteAsync(level);
         }
     }
 }
