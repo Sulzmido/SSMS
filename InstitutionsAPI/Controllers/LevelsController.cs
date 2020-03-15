@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InstitutionsAPI.Contexts;
 using InstitutionsAPI.Models;
+using InstitutionsAPI.DAL;
 
 namespace InstitutionsAPI.Controllers
 {
@@ -15,6 +16,7 @@ namespace InstitutionsAPI.Controllers
     public class LevelsController : ControllerBase
     {
         private readonly ApplicationContext _context = new ApplicationContext();
+        private readonly LevelDAO _levelDAO = new LevelDAO();
 
         public LevelsController()
         {
@@ -22,9 +24,26 @@ namespace InstitutionsAPI.Controllers
 
         // GET: api/Levels
         [HttpGet("{institutionCode}")]
-        public IEnumerable<Level> GetLevel()
+        public IEnumerable<Level> GetLevel([FromRoute] string institutionCode)
         {
-            return _context.Level;
+            IEnumerable<Level> levels = new List<Level>();
+
+            var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
+
+            if (connectionString == null || string.IsNullOrEmpty(connectionString))
+                return levels;
+
+            _levelDAO.ConnectionString = connectionString;
+            try
+            {
+                levels = _levelDAO.GetAll();
+                return levels;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return levels;
+            }
         }
 
         // GET: api/Levels/5
