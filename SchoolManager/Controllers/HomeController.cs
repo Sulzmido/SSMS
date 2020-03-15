@@ -7,25 +7,18 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using InstitutionsAPI.Core.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using SchoolManager.Models;
 
 namespace SchoolManager.Controllers
 {
     public class HomeController : Controller
     {
-        private static HttpClient _client = GetHttpClient();
+        private readonly IConfiguration _config;
 
-        private static HttpClient GetHttpClient()
+        public HomeController(IConfiguration configuration)
         {
-            var baseUrl = "http://localhost/InstitutionsAPI/api/";
-
-            var client = new HttpClient();
-
-            client.BaseAddress = new Uri(baseUrl);
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-            return client;
+            _config = configuration;
         }
 
         public IActionResult Index()
@@ -60,20 +53,10 @@ namespace SchoolManager.Controllers
 
         public IActionResult Institution()
         {
-            string apiUrl = $"Institutions/7";
+            var institutionName = _config.GetValue<string>("InstitutionName");
+            var institutionCode = _config.GetValue<string>("InstitutionCode");
 
-            Institution institution = null;
-
-            HttpResponseMessage response = _client.GetAsync(apiUrl).GetAwaiter().GetResult();
-            if (response.IsSuccessStatusCode)
-            {
-                institution = response.Content.ReadAsAsync<Institution>().GetAwaiter().GetResult();
-            }
-
-            if (institution == null)
-            {
-                return NotFound();
-            }
+            var institution = new Institution { Name = institutionName, Code = institutionCode, ConnectionString = "NIL"  };
 
             return View(institution);
         }      
