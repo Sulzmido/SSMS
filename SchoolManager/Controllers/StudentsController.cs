@@ -10,6 +10,7 @@ using SchoolManager.Models;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Configuration;
 
 namespace SchoolManager.Controllers
 {
@@ -17,32 +18,34 @@ namespace SchoolManager.Controllers
     {
         private static HttpClient _client = GetHttpClient();
 
-        private static readonly string _institutionCode = "2";
         private static readonly string _apiControllerName = "Students";
 
-        private ApplicationContext _context = new ApplicationContext();
+        private readonly IConfiguration _config;
+        private readonly string _institutionCode;
+        private readonly string _baseUrl;
+
+        public StudentsController(IConfiguration configuration)
+        {
+            _config = configuration;
+
+            _institutionCode = _config.GetValue<string>("InstitutionCode");
+            _baseUrl = _config.GetValue<string>("InstitutionsAPIUrl");
+        }
 
         private static HttpClient GetHttpClient()
         {
-            var baseUrl = "http://localhost/InstitutionsAPI/api/";
-
             var client = new HttpClient();
 
-            client.BaseAddress = new Uri(baseUrl);
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             return client;
         }
 
-        public StudentsController()
-        {
-        }
-
         // GET: Students
         public async Task<IActionResult> Index()
         {
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}";
 
             List<Student> students = null;
 
@@ -64,7 +67,7 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}/{id}";
 
             Student subject = null;
 
@@ -112,7 +115,7 @@ namespace SchoolManager.Controllers
                 }
             };
 
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}";
 
             if (ModelState.IsValid)
             {
@@ -132,7 +135,7 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}/{id}";
 
             Student student = null;
 
@@ -179,7 +182,7 @@ namespace SchoolManager.Controllers
                 }
             };
 
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}/{id}";
 
             if (ModelState.IsValid)
             {
@@ -212,7 +215,7 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}/{id}";
 
             Student student = null;
 
@@ -235,7 +238,7 @@ namespace SchoolManager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}/{id}";
 
             HttpResponseMessage response = await _client.DeleteAsync(apiUrl);
 
@@ -246,7 +249,7 @@ namespace SchoolManager.Controllers
 
         private async Task<bool> StudentExists(int id)
         {
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}/{id}";
 
             Student student = null;
 

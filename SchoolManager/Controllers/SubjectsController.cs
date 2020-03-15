@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using SchoolManager.Extensions;
 using SchoolManager.ViewModels;
+using Microsoft.Extensions.Configuration;
 
 namespace SchoolManager.Controllers
 {
@@ -18,33 +19,37 @@ namespace SchoolManager.Controllers
     {
         private static HttpClient _client = GetHttpClient();
 
-        private static readonly string _institutionCode = "2";
+        private readonly IConfiguration _config;
+        private readonly string _institutionCode;
+        private readonly string _baseUrl;
         private static readonly string _apiControllerName = "Subjects";
 
-        private List<SelectListItem> _categorySelectListItems = GetSubjectCategories().GetAwaiter().GetResult(); 
+        private List<SelectListItem> _categorySelectListItems;
 
         private static HttpClient GetHttpClient()
         {
-            var baseUrl = "http://localhost/InstitutionsAPI/api/";
-
             var client = new HttpClient();
 
-            client.BaseAddress = new Uri(baseUrl);
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             return client;
-        }        
+        }
 
-        public SubjectsController()
+        public SubjectsController(IConfiguration configuration)
         {
-            
+            _config = configuration;
+
+            _institutionCode = _config.GetValue<string>("InstitutionCode");
+            _baseUrl = _config.GetValue<string>("InstitutionsAPIUrl");
+
+            _categorySelectListItems = GetSubjectCategories().GetAwaiter().GetResult();
         }
 
         // GET: Subjects
         public async Task<IActionResult> Index()
         {
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}";
 
             IList<IDictionary<string, object>> entities = null;
 
@@ -73,7 +78,7 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}/{id}";
 
             IDictionary<string, object> entity = null;
 
@@ -108,7 +113,7 @@ namespace SchoolManager.Controllers
         public async Task<IActionResult> Create([Bind("Name,Category")] SubjectViewModel model)
         {
             var subject = new { model.Name, model.Category };
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}";
 
             if (ModelState.IsValid)
             {
@@ -129,7 +134,7 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}/{id}";
 
             IDictionary<string, object> entity = null;
 
@@ -165,7 +170,7 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}/{id}";
 
             var subject = new { model.ID, model.Name, model.Category };
 
@@ -201,7 +206,7 @@ namespace SchoolManager.Controllers
                 return NotFound();
             }
 
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}/{id}";
 
             IDictionary<string, object> entity = null;
 
@@ -226,7 +231,7 @@ namespace SchoolManager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}/{id}";
 
             HttpResponseMessage response = await _client.DeleteAsync(apiUrl);
 
@@ -237,7 +242,7 @@ namespace SchoolManager.Controllers
 
         private async Task<bool> SubjectExists(int id)
         {
-            string apiUrl = $"{_apiControllerName}/{_institutionCode}/{id}";
+            string apiUrl = $"{_baseUrl}/{_apiControllerName}/{_institutionCode}/{id}";
 
             IDictionary<string, object> entity;
 
@@ -253,9 +258,9 @@ namespace SchoolManager.Controllers
             }
         }
 
-        private static async Task<List<SelectListItem>> GetSubjectCategories()
+        private async Task<List<SelectListItem>> GetSubjectCategories()
         {
-            string apiUrl = $"SubjectCategories/{_institutionCode}";
+            string apiUrl = $"{_baseUrl}/SubjectCategories/{_institutionCode}";
 
             List<SubjectCategory> categories = null;
 
@@ -282,7 +287,7 @@ namespace SchoolManager.Controllers
             {
                 var subjectCategoryId = Convert.ToString(subject["category"]);
 
-                string apiUrl = $"SubjectCategories/{_institutionCode}/{subjectCategoryId}";
+                string apiUrl = $"{_baseUrl}/SubjectCategories/{_institutionCode}/{subjectCategoryId}";
 
                 SubjectCategory subjectCategory = null;
 
