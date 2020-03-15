@@ -20,5 +20,7 @@ namespace SchoolManager.Models
         public DbSet<InstitutionsAPI.Core.Models.Subject> Subjects { get; set; }
 
         public DbSet<InstitutionsAPI.Core.Models.Student> Student { get; set; }
+
+        public DbSet<InstitutionsAPI.Core.Models.Institution> Institution { get; set; }
     }
 }
