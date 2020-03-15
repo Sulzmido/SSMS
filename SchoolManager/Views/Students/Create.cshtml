@@ -1,0 +1,81 @@
+﻿@using InstitutionsAPI.Core.Models;
+@model InstitutionsAPI.Core.Models.Student
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h2>Create</h2>
+
+<h4>Student</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Sex" class="control-label"></label>
+                <select asp-for="Sex" asp-items="Html.GetEnumSelectList<Gender>()" class="form-control">
+                    <option value="">Choose a gender</option>
+                </select>
+                <span asp-validation-for="Sex" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Age" class="control-label"></label>
+                <input asp-for="Age" class="form-control" type="number" />
+                <span asp-validation-for="Age" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Religion" class="control-label"></label>
+                <input asp-for="Religion" class="form-control" />
+                <span asp-validation-for="Religion" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DateOfBirth" class="control-label"></label>
+                <input asp-for="DateOfBirth" class="form-control" type="date" />
+                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Parent.NameOfParents" class="control-label"></label>
+                <input asp-for="Parent.NameOfParents" class="form-control" />
+                <span asp-validation-for="Parent.NameOfParents" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Parent.ParentDOB" class="control-label"></label>
+                <input asp-for="Parent.ParentDOB" class="form-control" type="date" />
+                <span asp-validation-for="Parent.ParentDOB" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Parent.ParentOccupation" class="control-label"></label>
+                <input asp-for="Parent.ParentOccupation" class="form-control" />
+                <span asp-validation-for="Parent.ParentOccupation" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Parent.MarriageStatus" class="control-label"></label>
+                <select asp-for="Parent.MarriageStatus" asp-items="Html.GetEnumSelectList<Status>()" class="form-control">
+                    <option value="">Choose a status</option>
+                </select>
+                <span asp-validation-for="Parent.MarriageStatus" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-default" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
