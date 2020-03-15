@@ -16,5 +16,7 @@ namespace InstitutionsAPI.Contexts
         }
 
         public DbSet<InstitutionsAPI.Models.Institution> Institutions { get; set; }
+
+        public DbSet<InstitutionsAPI.Models.Level> Level { get; set; }
     }
 }
