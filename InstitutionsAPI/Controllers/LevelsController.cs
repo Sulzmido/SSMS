@@ -47,27 +47,46 @@ namespace InstitutionsAPI.Controllers
         }
 
         // GET: api/Levels/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetLevel([FromRoute] int id)
+        [HttpGet("{institutionCode}/{id}")]
+
+        public async Task<IActionResult> GetLevel([FromRoute]string institutionCode, [FromRoute]int id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var level = await _context.Level.FindAsync(id);
+            var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
 
-            if (level == null)
+            if (connectionString == null || string.IsNullOrEmpty(connectionString))
             {
-                return NotFound();
+                return BadRequest("Invalid Institution Code");
             }
 
-            return Ok(level);
+            _levelDAO.ConnectionString = connectionString;
+
+            try
+            {
+                var level = await _levelDAO.FindAsync(id);
+
+                if (level == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(level);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return NotFound();
+            }
         }
 
         // PUT: api/Levels/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutLevel([FromRoute] int id, [FromBody] Level level)
+        [HttpPut("{institutionCode}/{id}")]
+
+        public async Task<IActionResult> PutLevel([FromRoute] string institutionCode, [FromRoute] int id, [FromBody] Level level)
         {
             if (!ModelState.IsValid)
             {
@@ -79,66 +98,102 @@ namespace InstitutionsAPI.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(level).State = EntityState.Modified;
+
+            var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
+
+            if (connectionString == null || string.IsNullOrEmpty(connectionString))
+            {
+                return BadRequest("Invalid Institution Code");
+            }
+
+            _levelDAO.ConnectionString = connectionString;
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _levelDAO.UpdateAsync(level);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                if (!LevelExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                Console.WriteLine(ex.Message);
+                return BadRequest("A system error occured " + ex.Message);
             }
 
             return NoContent();
         }
 
         // POST: api/Levels
-        [HttpPost]
-        public async Task<IActionResult> PostLevel([FromBody] Level level)
+        [HttpPost("{institutionCode}")]
+        public async Task<IActionResult> PostLevel([FromRoute] string institutionCode, [FromBody] Level level)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            _context.Level.Add(level);
-            await _context.SaveChangesAsync();
+            var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
 
-            return CreatedAtAction("GetLevel", new { id = level.ID }, level);
+            if (connectionString == null || string.IsNullOrEmpty(connectionString))
+            {
+                return BadRequest("Invalid Institution Code");
+            }
+
+            _levelDAO.ConnectionString = connectionString;
+
+            try
+            {
+                level = await _levelDAO.InsertAsync(level);
+            }
+            catch (Exception ex)
+            {
+                // Log exception.
+                return BadRequest(ex.ToString());
+            }
+
+            return CreatedAtAction("GetsubjectCategory", new { id = level.ID }, level);
         }
 
         // DELETE: api/Levels/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteLevel([FromRoute] int id)
+        [HttpDelete("{institutionCode}/{id}")]
+
+        public async Task<IActionResult> DeleteLevel([FromRoute] string institutionCode, [FromRoute] int id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var level = await _context.Level.FindAsync(id);
+            var connectionString = _context.Institutions.Single(i => i.Code.Equals(institutionCode)).ConnectionString;
+
+            if (connectionString == null || string.IsNullOrEmpty(connectionString))
+            {
+                return BadRequest("Invalid Institution Code");
+            }
+
+            _levelDAO.ConnectionString = connectionString;
+
+            var level = await _levelDAO.FindAsync(id);
+
             if (level == null)
             {
                 return NotFound();
             }
 
-            _context.Level.Remove(level);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _levelDAO.DeleteAsync(level);
+            }
+            catch (Exception ex)
+            {
+                // Log exception.
+                return BadRequest(ex.ToString());
+            }
 
             return Ok(level);
         }
 
-        private bool LevelExists(int id)
-        {
-            return _context.Level.Any(e => e.ID == id);
-        }
+        //private bool LevelExists(int id)
+        //{
+        //    return _context.Level.Any(e => e.ID == id);
+        //}
     }
 }
