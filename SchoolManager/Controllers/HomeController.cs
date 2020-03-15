@@ -60,7 +60,7 @@ namespace SchoolManager.Controllers
 
         public IActionResult Institution()
         {
-            string apiUrl = $"Institutions/1";
+            string apiUrl = $"Institutions/7";
 
             Institution institution = null;
 

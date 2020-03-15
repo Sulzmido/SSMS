@@ -38,6 +38,9 @@
         </div>
     </nav>
 
+    <div class="placeholder">
+    </div>
+
     <div class="sidenav">
         <a asp-controller="SubjectCategories" asp-action="Index">Subject Categories</a>
         <a asp-controller="Subjects" asp-action="Index">Subjects</a>
@@ -47,7 +50,7 @@
 
     <partial name="_CookieConsentPartial" />
 
-    <div class="container body-content">
+    <div class="container-fluid body-content">
         @RenderBody()
         <hr />
         <footer>
