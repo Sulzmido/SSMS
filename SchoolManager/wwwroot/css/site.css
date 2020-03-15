@@ -91,9 +91,63 @@ body {
     height: 510px !important;
 }
 
-.container-fluid.body-content{
+.container-fluid.body-content {
     padding: 0;
 }
 
+.overlay-image {
+    position: absolute;
+    height: 100vh;
+    top: 0;
+    z-index: 1;
+    /*background-image: url("../images/smiling_stud.jpg");*/
+}
+.overlay-image > img{
+    height: 100%;
+    width: 100%;
 
-/*assign teachers stop subjects -- upload students exams and results - manage your students data subject commandkk*/
+    /*background-size: contain;*/
+}
+
+nav{
+    background-color: blue;
+}
+
+.nav > li > a, .navbar-brand{
+    color: white;
+    font-weight: 700;
+}
+
+main{
+    height: 100vh;
+    background: rgba(0,0,50,0.65);
+    z-index: 99;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    color: white;
+    padding: 4rem;
+}
+
+.banner{
+    margin-top: 8rem;
+    margin-left: 4rem;
+}
+
+.banner li{
+    font-size: 2rem;
+    margin: 3rem 1rem;
+    list-style: square
+}
+
+.banner .buttons{
+    margin-top: 4rem;
+}
+
+.buttons > a{
+    margin: 0 1rem;
+    box-shadow: 2px 2px 8px black;
+    background-color: blue;
+
+}
+/*assign teachers to subjects -- upload students exams and results - manage your students data subject commandkk*/
