@@ -1,0 +1,108 @@
+﻿@model IEnumerable<InstitutionsAPI.Core.Models.Student>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h2>Students</h2>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Sex)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Age)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Religion)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DateOfBirth)
+            </th>
+
+            <th>
+                @Html.DisplayNameFor(model => model.Parent.NameOfParents)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Parent.Address)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Parent.MarriageStatus)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Parent.ParentOccupation)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Parent.StateOfOrigin)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Parent.ParentDOB)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Parent.ParentNumber)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>                
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Sex)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Age)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Religion)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DateOfBirth)
+            </td>
+
+            <td>
+                @Html.DisplayFor(modelItem => item.Parent.NameOfParents)
+            </td>
+            <td>
+                @{item.Parent.Address = @item.Parent.Address ?? "NIL";}
+                @Html.DisplayFor(modelItem => item.Parent.Address)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Parent.MarriageStatus)
+            </td>
+            <td>
+                @{item.Parent.ParentOccupation = @item.Parent.ParentOccupation ?? "NIL";}
+                @Html.DisplayFor(modelItem => item.Parent.ParentOccupation)
+            </td>
+            <td>
+                @{item.Parent.StateOfOrigin = @item.Parent.StateOfOrigin ?? "NIL";}
+                @Html.DisplayFor(modelItem => item.Parent.StateOfOrigin)
+            </td>
+            <td>
+                @{item.Parent.ParentDOB = @item.Parent.ParentDOB ?? "NIL";}
+                @Html.DisplayFor(modelItem => item.Parent.ParentDOB)
+            </td>
+            <td>
+                @{item.Parent.ParentNumber = @item.Parent.ParentNumber ?? "NIL";}
+                @Html.DisplayFor(modelItem => item.Parent.ParentNumber)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.ID">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
