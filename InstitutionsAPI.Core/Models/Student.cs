@@ -5,7 +5,7 @@ using System.Text;
 
 namespace InstitutionsAPI.Core.Models
 {
-    public enum Gender{
+    public enum Gender {
         Male, Female
     }
 
